@@ -1,0 +1,262 @@
+/* ------------------------------------------------------------------
+   VYUH — self-hosted typefaces
+   Display / editorial : OGG  ->  Zodiak (closest freely-licensed match:
+                          high contrast, tapered stems)
+   UI / functional     : GILROY -> Switzer (geometric-humanist sans)
+   Instrument Serif is bundled as a secondary editorial fallback.
+------------------------------------------------------------------- */
+@font-face {
+  font-family: 'Zodiak';
+  src: url('./fonts/Zodiak-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Instrument Serif';
+  src: url('./fonts/InstrumentSerif-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Switzer';
+  src: url('./fonts/Switzer-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Switzer';
+  src: url('./fonts/Switzer-Medium.woff2') format('woff2');
+  font-weight: 500 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --sky: #aed9f0;
+    --cream: #f5f0df;
+    --charcoal: #242729;
+    --white: #ffffff;
+    /* reference atmosphere: palette colours sit under a soft white veil */
+    --haze: 0.14;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-white font-sans text-charcoal antialiased;
+    font-size: 16px;
+    line-height: 1.7;
+    letter-spacing: -0.005em;
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-weight: 400;
+    letter-spacing: -0.024em;
+    text-wrap: balance;
+  }
+
+  section[id],
+  [id='features'],
+  [id='resources'] {
+    scroll-margin-top: 24px;
+  }
+
+  ::selection {
+    background: #aed9f0;
+    color: #242729;
+  }
+
+  :focus-visible {
+    outline: 2px solid #242729;
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+}
+
+@layer components {
+  .shell {
+    @apply mx-auto w-full max-w-[1360px] px-5 sm:px-8 lg:px-6;
+  }
+
+  /* mixed serif / sans headline word (reference: "strong", "Vyuh") */
+  .serif-word {
+    font-family: 'Zodiak', 'Instrument Serif', Georgia, serif;
+    letter-spacing: -0.01em;
+  }
+
+  .eyebrow {
+    @apply flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.18em] text-charcoal/70;
+  }
+
+  .eyebrow-dot {
+    @apply inline-block h-[7px] w-[7px] rounded-full border border-charcoal/45;
+  }
+
+  .arrow-btn {
+    @apply inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-charcoal text-white transition duration-500 ease-calm hover:bg-charcoal/85 hover:-translate-y-[2px];
+  }
+
+  .ghost-btn {
+    @apply inline-flex items-center gap-3 rounded-full border border-charcoal/15 px-5 py-2.5 text-[13px] font-medium text-charcoal transition duration-500 ease-calm hover:border-charcoal/35 hover:bg-white/70;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Atmosphere
+   The reference is the locked four-colour palette seen through a soft
+   white veil, so every surface is a palette colour plus the same haze.
+------------------------------------------------------------------- */
+.page-haze {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  background: rgba(255, 255, 255, var(--haze));
+}
+
+/* ------------------------------------------------------------------
+   Hero atmosphere — layered, not a flat gradient:
+   1. base sky gradient (sky blue -> airy white -> warm cream)
+   2. photographic cloud texture, softly blended
+   3. soft daylight wash from the upper left
+   4. cream graduation at the very bottom so it meets the About band
+------------------------------------------------------------------- */
+.hero-sky {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--sky);
+  background-image: linear-gradient(
+    180deg,
+    #a9d6ef 0%,
+    #aed9f0 18%,
+    #bcdff2 36%,
+    #d3e8f2 50%,
+    #e7efeb 62%,
+    #f3f5ef 74%,
+    #f9f7f0 86%,
+    #faf8ef 100%
+  );
+}
+
+.hero-sky::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-image: url('/assets/clouds-hero.webp');
+  background-size: 132% auto;
+  background-position: center 8%;
+  background-repeat: no-repeat;
+  opacity: 0.82;
+  /* keep the very top as clean sky; dissolve the texture into the cream below */
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.55) 9%,
+    #000 22%,
+    #000 56%,
+    rgba(0, 0, 0, 0.5) 76%,
+    transparent 95%
+  );
+  mask-image: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.55) 9%,
+    #000 22%,
+    #000 56%,
+    rgba(0, 0, 0, 0.5) 76%,
+    transparent 95%
+  );
+}
+
+.hero-sky::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(ellipse 70% 55% at 50% -10%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 70%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 34%, rgba(250, 247, 236, 0.55) 78%, #faf8ef 97%);
+}
+
+/* chrome that sits on the hero gradient (nav wrapper + routed placeholder pages) */
+.sky-canvas {
+  background-color: var(--sky);
+  background-image: linear-gradient(180deg, #a9d6ef 0%, #aed9f0 26%, #c9e5f2 62%, #eef2ee 88%, #faf8ef 100%);
+}
+
+/* pale sky wash used for the lower marketing sections */
+.wash-sky {
+  background-color: #ffffff;
+  background-image: linear-gradient(180deg, #fcfdfe 0%, #f7fbfe 45%, #f6fafd 100%);
+}
+
+.wash-cream {
+  background-color: var(--cream);
+  background-image: linear-gradient(180deg, #faf8ef 0%, #f8f4e7 30%, #f5f0df 62%, #f5f0df 100%);
+}
+
+/* ---------- motion: calm, reference-appropriate ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 900ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 900ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -8px, 0);
+  }
+}
+
+.float-soft {
+  animation: float-soft 9s ease-in-out infinite;
+}
+
+.float-soft-slow {
+  animation: float-soft 11s ease-in-out infinite;
+  animation-delay: -3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .float-soft,
+  .float-soft-slow {
+    animation: none;
+  }
+}
