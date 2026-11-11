@@ -117,10 +117,12 @@ for (const [role, items] of Object.entries(NAV_ITEMS)) {
     continue
   }
   for (const item of items) {
+    /* Failures are injected at random, so a single sample can land on the one
+       request that succeeded. Sample a few times: the page passes if any run
+       shows a recoverable error, and only a page that never fails is reported. */
     let body = await mount(item.to)
-    /* Randomised transport failures rarely leave a page mid-flight, but if one
-       does the honest thing is to look again rather than report a false alarm. */
-    if (!/could not be (loaded|displayed)|something went wrong|did not respond|unavailable right now/i.test(body)) {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      if (/could not be (loaded|displayed)|something went wrong|did not respond|unavailable right now/i.test(body)) break
       body = await mount(item.to)
     }
     /* ErrorState titles vary ("… could not be loaded", "… could not be
