@@ -4,7 +4,9 @@ import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 import ToastProvider from './context/ToastProvider.jsx'
 import ProtectedRoute from './layouts/ProtectedRoute.jsx'
 import WorkspaceLayout from './layouts/WorkspaceLayout.jsx'
-import { ROLE_HOME } from './lib/navigation.js'
+import ErrorBoundary from './ui/ErrorBoundary.jsx'
+import RouteFallback from './ui/RouteFallback.jsx'
+import { destinationFor } from './services/auth.service.js'
 import './index.css'
 import './styles/workspace.css'
 
@@ -26,29 +28,24 @@ const StudentRoutes = lazy(studentRoutes)
 const FacultyRoutes = lazy(facultyRoutes)
 const AdminRoutes = lazy(adminRoutes)
 
-function RouteFallback() {
-  return (
-    <div className="flex min-h-[60vh] items-center justify-center">
-      <div className="flex items-center gap-2 text-[12.5px] text-muted">
-        <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[var(--line-strong)] border-t-[var(--ink)]" />
-        Loading…
-      </div>
-    </div>
-  )
-}
-
 function RootRedirect() {
   const { isAuthenticated, session, booting } = useAuth()
-  if (booting) return <RouteFallback />
+  if (booting) return <RouteFallback label="Opening your workspace" />
   if (!isAuthenticated) return <Navigate to="/login" replace />
-  return <Navigate to={ROLE_HOME[session.role] || '/login'} replace />
+  const target = destinationFor(session)
+  return <Navigate to={target.to} replace state={target.state} />
 }
+
+const WorkspaceSuspense = ({ children }) => (
+  <Suspense fallback={<RouteFallback label="Loading section" />}>{children}</Suspense>
+)
 
 export default function App() {
   return (
     <AuthProvider>
       <ToastProvider>
-        <Suspense fallback={<div className="min-h-screen bg-white" />}>
+        <Suspense fallback={<RouteFallback fullHeight label="Starting Vyuh" />}>
+          <ErrorBoundary key="app" resetKey="app" variant="page">
           <Routes>
             {/* ---------------------------- public ---------------------------- */}
             <Route path="/" element={<LandingPage />} />
@@ -124,7 +121,7 @@ export default function App() {
               }
             >
               <Route index element={<Navigate to="dashboard" replace />} />
-              <Route path="*" element={<Suspense fallback={<RouteFallback />}><StudentRoutes /></Suspense>} />
+              <Route path="*" element={<WorkspaceSuspense><StudentRoutes /></WorkspaceSuspense>} />
             </Route>
 
             <Route
@@ -136,7 +133,7 @@ export default function App() {
               }
             >
               <Route index element={<Navigate to="dashboard" replace />} />
-              <Route path="*" element={<Suspense fallback={<RouteFallback />}><FacultyRoutes /></Suspense>} />
+              <Route path="*" element={<WorkspaceSuspense><FacultyRoutes /></WorkspaceSuspense>} />
             </Route>
 
             <Route
@@ -148,13 +145,14 @@ export default function App() {
               }
             >
               <Route index element={<Navigate to="overview" replace />} />
-              <Route path="*" element={<Suspense fallback={<RouteFallback />}><AdminRoutes /></Suspense>} />
+              <Route path="*" element={<WorkspaceSuspense><AdminRoutes /></WorkspaceSuspense>} />
             </Route>
 
             {/* ------------------------- app entry alias ----------------------- */}
             <Route path="/app" element={<RootRedirect />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
+          </ErrorBoundary>
         </Suspense>
       </ToastProvider>
     </AuthProvider>

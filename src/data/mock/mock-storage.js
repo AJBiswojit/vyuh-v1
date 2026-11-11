@@ -10,7 +10,7 @@
 import { buildSeed } from './seed.js'
 
 export const STORAGE_KEY = 'vyuh:mock:v1'
-export const SCHEMA_VERSION = 3
+export const SCHEMA_VERSION = 4
 
 export function emptyStore() {
   return {

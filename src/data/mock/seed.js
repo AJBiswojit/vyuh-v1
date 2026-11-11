@@ -21,6 +21,7 @@ import { INTEGRITY_EVENTS, EXAM_CONTROLS } from './integrity.mock.js'
 import { SUPPORT_TICKETS } from './support.mock.js'
 import { AUDIT_EVENTS } from './audit.mock.js'
 import { SCHEMA_VERSION, emptyStore, hashPassword } from './mock-storage.js'
+import { rebaseDemoTimeline } from './demo-timeline.js'
 
 export const INSTITUTE = {
   id: 'inst_001',
@@ -102,5 +103,7 @@ export function buildSeed() {
     return { ...question, usageCount }
   })
 
-  return store
+  /* The authored teaching week is treated as "today" so live sessions, open
+     examinations and upcoming classes stay believable whenever the demo is run. */
+  return rebaseDemoTimeline(store)
 }

@@ -106,10 +106,10 @@ export default function AttendancePage() {
                 <span className="text-[10.5px] text-soft">Eligible minutes only</span>
               </div>
               <div className="mt-3 space-y-3">
-                {data.subjects.length === 0 ? (
+                {data.bySubject.length === 0 ? (
                   <p className="py-6 text-center text-[11.5px] text-soft">No subject-level sessions yet.</p>
                 ) : (
-                  data.subjects.map((subject) => (
+                  data.bySubject.map((subject) => (
                     <div key={subject.subjectId}>
                       <div className="flex items-baseline justify-between gap-2">
                         <p className="text-[12px] font-medium text-ink">{subjectName(subject.subjectId)}</p>

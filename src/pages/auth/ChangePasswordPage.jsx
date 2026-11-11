@@ -61,7 +61,10 @@ export default function ChangePasswordPage() {
     try {
       await authService.changePassword({ currentPassword, nextPassword, confirmPassword })
       refresh()
-      navigate(ROLE_HOME[session?.role] || '/login', { replace: true })
+      /* Return the user to whatever the guard interrupted, otherwise their home. */
+      const from = location.state?.from
+      const backTo = from && from.startsWith(`/${session?.role}/`) ? from : ROLE_HOME[session?.role] || '/login'
+      navigate(backTo, { replace: true })
     } catch (caught) {
       setError(caught?.message || 'The password could not be changed.')
     } finally {

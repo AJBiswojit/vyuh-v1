@@ -111,8 +111,15 @@ export const liveClassService = {
       const minutesSinceStart = klass.sessionStartedAt
         ? (Date.now() - new Date(klass.sessionStartedAt).getTime()) / 60000
         : null
+      const lateAllowance = policy?.lateJoinAllowanceMinutes ?? 15
       const pastLateWindow =
-        klass.sessionStartedAt && !klass.lateJoinAllowed && minutesSinceStart > (policy?.lateJoinAllowanceMinutes ?? 15)
+        klass.sessionStartedAt && !klass.lateJoinAllowed && minutesSinceStart > lateAllowance
+
+      /* A published session keeps its `live` status until faculty end it, so the
+         scheduled window is checked as well — otherwise a stale "live" flag on a
+         session from days ago would offer a join button that cannot work. */
+      const scheduledEnd = klass.scheduledEndAt ? new Date(klass.scheduledEndAt).getTime() : null
+      const windowClosed = scheduledEnd !== null && Date.now() > scheduledEnd
 
       let canJoin = false
       let reason = null
@@ -120,7 +127,8 @@ export const liveClassService = {
       else if (klass.status === 'scheduled') reason = 'The session has not started yet.'
       else if (['ended', 'recording-processing', 'recording-published'].includes(klass.status)) {
         reason = 'This session has ended. The recording is available in Recordings.'
-      } else if (pastLateWindow) reason = 'Late joining is not permitted for this session.'
+      } else if (windowClosed) reason = 'This session has ended. The recording is available in Recordings.'
+      else if (pastLateWindow) reason = 'Late joining is not permitted for this session.'
       else canJoin = true
 
       return {

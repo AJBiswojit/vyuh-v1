@@ -47,6 +47,7 @@ export default function ExamInstructionsPage() {
     try {
       const result = await attemptService.startExam(examId, user.id)
       if (result.alreadySubmitted) {
+        /* started/attempt shape: { attempt, resumed, alreadySubmitted } */
         toast.info('Already submitted', 'This attempt was submitted earlier. Open the result instead.')
         navigate(`/student/exams/${examId}/result`)
         return

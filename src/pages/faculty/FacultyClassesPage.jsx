@@ -50,7 +50,11 @@ export default function FacultyClassesPage() {
   const [tab, setTab] = useState('live')
   /* Deep links such as /faculty/classes/class_001/studio open the studio
      directly; leaving the studio returns to the list so the URL stays honest. */
-  const [studioId, setStudioId] = useState(studioParam || null)
+  /* The URL is the single source of truth for which studio is open, so a
+     refresh, the back button and a pasted deep link all land in the same place
+     and the two can never disagree. */
+  const studioId = studioParam || null
+  const setStudioId = (id) => navigate(id ? `/faculty/classes/${id}/studio` : '/faculty/classes')
   const [createOpen, setCreateOpen] = useState(false)
   const [form, setForm] = useState({
     title: '',
@@ -136,7 +140,6 @@ export default function FacultyClassesPage() {
       toast.success('Session started', 'Students can join the classroom now.')
       refresh()
       setStudioId(klass.id)
-      navigate(`/faculty/classes/${klass.id}/studio`, { replace: true })
     } catch (caught) {
       toast.error('Session could not start', caught?.message)
     }
@@ -162,15 +165,26 @@ export default function FacultyClassesPage() {
   if (studioId) {
     return (
       <div className="-m-3 sm:-m-5">
+        {loading && !data ? (
+          /* Deep link straight into a studio: show the loading shell rather than
+             a studio with no session behind it. */
+          <div className="p-6">
+            <LoadingBlock rows={5} label="Opening the classroom" />
+          </div>
+        ) : error && !data ? (
+          <div className="p-6">
+            <ErrorState error={error} onRetry={refresh} title="The classroom could not be opened" />
+          </div>
+        ) : (
         <FacultyClassStudioPage
           classId={studioId}
           embedded
           onExit={() => {
             setStudioId(null)
-            navigate('/faculty/classes', { replace: true })
             refresh()
           }}
         />
+        )}
       </div>
     )
   }
@@ -390,10 +404,7 @@ export default function FacultyClassesPage() {
                         size="sm"
                         variant="primary"
                         icon={Radio}
-                        onClick={() => {
-                          setStudioId(klass.id)
-                          navigate(`/faculty/classes/${klass.id}/studio`)
-                        }}
+                        onClick={() => setStudioId(klass.id)}
                       >
                         Enter studio
                       </Button>

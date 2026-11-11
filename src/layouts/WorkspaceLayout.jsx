@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import {
@@ -18,6 +18,8 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../ui/feedback.jsx'
 import NotificationInbox from './NotificationInbox.jsx'
 import CommandPalette from './CommandPalette.jsx'
+import ErrorBoundary from '../ui/ErrorBoundary.jsx'
+import RouteFallback from '../ui/RouteFallback.jsx'
 
 const COLLAPSE_KEY = 'vyuh:sidebar-collapsed'
 
@@ -110,9 +112,15 @@ export default function WorkspaceLayout() {
 
   const handleLogout = useCallback(async () => {
     setLoggingOut(true)
-    await logout()
-    toast.info('Signed out', 'Your demo session has been cleared.')
-    navigate('/login', { replace: true })
+    try {
+      await logout()
+    } finally {
+      /* Navigation happens even if clearing storage failed, otherwise the user
+         is stranded in a workspace they no longer have a session for. */
+      toast.info('Signed out', 'Your demo session has been cleared.')
+      navigate('/login', { replace: true })
+      setLoggingOut(false)
+    }
   }, [logout, navigate, toast])
 
   const navContent = (
@@ -331,7 +339,13 @@ export default function WorkspaceLayout() {
           </header>
 
           <main className="ws-canvas" id="main-content">
-            <Outlet />
+            {/* Each section is isolated: a render error shows a recoverable message
+                instead of unmounting the shell and leaving a blank screen. */}
+            <ErrorBoundary resetKey={location.pathname}>
+              <Suspense fallback={<RouteFallback />}>
+                <Outlet />
+              </Suspense>
+            </ErrorBoundary>
           </main>
         </div>
       </div>

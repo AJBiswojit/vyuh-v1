@@ -1,9 +1,11 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { ConfirmContext, ToastContext, ToastViewport, ConfirmDialog } from '../ui/feedback.jsx'
 
 let counter = 0
 
 export default function ToastProvider({ children }) {
+  const { pathname } = useLocation()
   const [toasts, setToasts] = useState([])
   const [confirmRequest, setConfirmRequest] = useState(null)
   const resolver = useRef(null)
@@ -55,6 +57,18 @@ export default function ToastProvider({ children }) {
     resolver.current?.(value)
     resolver.current = null
   }, [])
+
+  /* Toasts and dialogs live above the routes, so they must not survive a
+     navigation to another page (that is how a stale "Signed out" toast ended up
+     floating over the landing page after logout). */
+  useEffect(() => {
+    setToasts([])
+    if (resolver.current) {
+      resolver.current(false)
+      resolver.current = null
+    }
+    setConfirmRequest(null)
+  }, [pathname])
 
   return (
     <ToastContext.Provider value={api}>

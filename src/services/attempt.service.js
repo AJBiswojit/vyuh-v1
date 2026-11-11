@@ -59,10 +59,14 @@ export const attemptService = {
           status: 409,
         })
 
+        /* An existing attempt is reported before the window check: a student who
+           already submitted must be sent to their result, not told the window
+           closed (which used to surface as a confusing error on the paper they
+           had just finished). */
         const existing = findAttemptFor(examId, studentId)
         if (existing) {
           if (existing.status === 'in-progress') {
-            return { attempt: decorateAttempt(existing), resumed: true }
+            return { attempt: decorateAttempt(existing), resumed: true, alreadySubmitted: false }
           }
           return { attempt: decorateAttempt(existing), resumed: false, alreadySubmitted: true }
         }
@@ -119,7 +123,7 @@ export const attemptService = {
           ])
         }
 
-        return { attempt: decorateAttempt(attempt), resumed: false }
+        return { attempt: decorateAttempt(attempt), resumed: false, alreadySubmitted: false }
       },
       { label: 'examination start', latency: 340 },
     )

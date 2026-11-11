@@ -3,9 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowRight, GraduationCap, Eye, EyeOff, ShieldCheck, Sparkles, Info } from 'lucide-react'
 import { Logo, Wordmark } from '../../components/Icons.jsx'
-import { authService } from '../../services/auth.service.js'
+import { authService, destinationFor } from '../../services/auth.service.js'
 import { useAuth } from '../../context/AuthContext.jsx'
-import { ROLE_HOME } from '../../lib/navigation.js'
 import { FormError } from '../../ui/fields.jsx'
 import Button from '../../ui/Button.jsx'
 
@@ -46,11 +45,15 @@ export default function LoginPage() {
 
   const isDev = import.meta.env.DEV
 
+  /* Nobody who is already signed in should be looking at a sign-in form —
+     but this effect is deliberately NOT allowed to fight with submit(): while a
+     sign-in is in flight the form owns navigation, otherwise both handlers
+     navigated at once and the loser overwrote the deep link. */
   useEffect(() => {
-    if (isAuthenticated && session) {
-      navigate(ROLE_HOME[session.role] || '/', { replace: true })
-    }
-  }, [isAuthenticated, session, navigate])
+    if (pending || !isAuthenticated || !session) return
+    const target = destinationFor(session, location.state?.from)
+    navigate(target.to, { replace: true, state: target.state })
+  }, [isAuthenticated, session, pending, location.state, navigate])
 
   useEffect(() => {
     if (!isDev) return
@@ -67,10 +70,12 @@ export default function LoginPage() {
     setPending(true)
     try {
       const result = await login({ email, password })
-      const target = location.state?.from && location.state.from.startsWith(`/${result.role}`)
-        ? location.state.from
-        : result.redirectTo
-      navigate(target, { replace: true })
+      /* Result carries the authoritative destination (role home or the forced
+         password change) and honours a deep link when it belongs to this role. */
+      const target = destinationFor(result, location.state?.from)
+      setPending(false)
+      navigate(target.to, { replace: true, state: target.state })
+      return
     } catch (caught) {
       setError(caught?.message || 'Sign-in failed. Please try again.')
     } finally {

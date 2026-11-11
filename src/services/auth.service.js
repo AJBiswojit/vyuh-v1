@@ -12,6 +12,7 @@ import {
   hashPassword,
 } from '../data/mock/mock-storage.js'
 import { DEMO_PASSWORD } from '../data/mock/users.mock.js'
+import { STORAGE_KEY as STORE_KEY } from '../data/mock/mock-storage.js'
 import { validatePassword } from '../lib/validation.js'
 
 const SESSION_KEY = 'vyuh:session:v1'
@@ -54,7 +55,34 @@ export function roleHome(role) {
   return ROLE_HOME[role] || '/login'
 }
 
+/** Keeps local changes after a page refresh, but starts a fresh demo dataset
+    once a tab is reopened later (a new browsing session), so nobody is stuck
+    with accidental edits from a previous visit. */
+function rollDemoDataSession() {
+  if (typeof window === 'undefined' || !window.sessionStorage) return
+  try {
+    if (window.sessionStorage.getItem('vyuh:demo-session')) return
+    window.sessionStorage.setItem('vyuh:demo-session', '1')
+    if (window.localStorage.getItem(SESSION_KEY)) return
+    if (window.localStorage.getItem(STORE_KEY)) window.localStorage.removeItem(STORE_KEY)
+  } catch {
+    /* storage unavailable — the mock store simply stays in memory */
+  }
+}
+
+/**
+ * Where a signed-in user should land. One resolver, used by the guard, the
+ * sign-in screen and /app, so a deep link is honoured identically everywhere.
+ */
+export function destinationFor({ role, mustChangePassword } = {}, from) {
+  if (mustChangePassword) return { to: '/change-password', state: { forced: true, from } }
+  if (from && typeof from === 'string' && from.startsWith(`/${role}/`)) return { to: from }
+  return { to: roleHome(role) }
+}
+
+
 export function getCurrentSession() {
+  rollDemoDataSession()
   const session = readSession()
   if (!session) return null
   const store = loadStore()
