@@ -1,0 +1,78 @@
+/* Integrity events seeded separately from attempts so the admin console has a
+   history to review. Technical interruptions are never auto-classified as
+   misconduct — severity is descriptive and every resolution is recorded. */
+
+export const INTEGRITY_EVENTS = [
+  {
+    id: 'int_evt_101',
+    attemptId: 'attempt_004',
+    examId: 'exam_full_002',
+    studentId: 'stu_004',
+    type: 'reconnection',
+    severity: 'info',
+    label: 'Reconnected after 2 minutes',
+    detail: 'Connection dropped at 06:14 and was restored at 06:16. Timer continued, responses preserved.',
+    at: '2026-11-02T06:14:00.000Z',
+    resolved: true,
+    resolution: 'Verified as a home-network interruption. No action taken.',
+    resolvedBy: 'admin_001',
+    resolvedAt: '2026-11-02T09:00:00.000Z',
+  },
+  {
+    id: 'int_evt_102',
+    attemptId: 'attempt_002',
+    examId: 'exam_full_002',
+    studentId: 'stu_002',
+    type: 'tab-blur',
+    severity: 'warning',
+    label: 'Window lost focus four times',
+    detail: 'Focus events at 04:52, 05:10, 05:11 and 06:03. Total away time 1 minute 48 seconds.',
+    at: '2026-11-02T06:03:00.000Z',
+    resolved: true,
+    resolution: 'Reviewed with the candidate; agreed to close other applications. Marked as technical.',
+    resolvedBy: 'admin_001',
+    resolvedAt: '2026-11-03T04:30:00.000Z',
+  },
+  {
+    id: 'int_evt_103',
+    attemptId: 'attempt_007',
+    examId: 'exam_phy_001',
+    studentId: 'stu_004',
+    type: 'late-join',
+    severity: 'info',
+    label: 'Joined 3 minutes after the window opened',
+    detail: 'The examination allows no late join; the attempt was opened by the faculty proctor.',
+    at: '2026-11-09T04:03:00.000Z',
+    resolved: false,
+    resolution: null,
+    resolvedBy: null,
+    resolvedAt: null,
+  },
+  {
+    id: 'int_evt_104',
+    attemptId: 'attempt_009',
+    examId: 'exam_neet_001',
+    studentId: 'stu_006',
+    type: 'reconnection',
+    severity: 'info',
+    label: 'Reconnected after 18 seconds',
+    detail: 'Brief interruption during the Biology section. No responses were lost.',
+    at: '2026-11-11T03:41:00.000Z',
+    resolved: false,
+    resolution: null,
+    resolvedBy: null,
+    resolvedAt: null,
+  },
+]
+
+export const EXAM_CONTROLS = [
+  {
+    id: 'control_seed_001',
+    examId: 'exam_neet_001',
+    action: 'time-extended',
+    note: 'Five minutes extended for two candidates affected by a platform reconnection.',
+    actorId: 'admin_001',
+    at: '2026-11-11T04:10:00.000Z',
+    affectedStudentIds: ['stu_007', 'stu_009'],
+  },
+]

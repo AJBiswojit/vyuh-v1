@@ -1,0 +1,737 @@
+/* ------------------------------------------------------------------
+   VYUH — workspace design tokens and shared primitives
+   Only the four locked brand colours (sky, cream, charcoal, white) are used
+   as accents. Every additional tone is a neutral derived from charcoal/white.
+------------------------------------------------------------------- */
+
+:root {
+  --sky: #aed9f0;
+  --cream: #f5f0df;
+  --charcoal: #242729;
+  --white: #ffffff;
+
+  --sky-50: #f2f9fd;
+  --sky-100: #e3f2fb;
+  --sky-200: #cbe7f6;
+  --sky-300: #aed9f0;
+  --sky-400: #8ec6e4;
+  --sky-500: #6aaed2;
+  --sky-700: #2f6b8c;
+
+  --cream-50: #fbf9f1;
+  --cream-100: #f7f3e4;
+  --cream-200: #f5f0df;
+  --cream-300: #e9e1c8;
+  --cream-500: #b9a97a;
+  --cream-700: #8a7a4e;
+
+  --ink: #242729;
+  --ink-80: rgba(36, 39, 41, 0.8);
+  --ink-70: rgba(36, 39, 41, 0.7);
+  --ink-60: rgba(36, 39, 41, 0.6);
+  --ink-45: rgba(36, 39, 41, 0.45);
+  --ink-30: rgba(36, 39, 41, 0.3);
+  --line: rgba(36, 39, 41, 0.1);
+  --line-strong: rgba(36, 39, 41, 0.18);
+  --surface: #ffffff;
+  --surface-muted: #fafaf8;
+  --surface-sunken: #f4f4f0;
+
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+
+  --shadow-xs: 0 1px 2px rgba(36, 39, 41, 0.05);
+  --shadow-sm: 0 4px 14px -10px rgba(36, 39, 41, 0.28);
+  --shadow-md: 0 12px 32px -20px rgba(36, 39, 41, 0.3);
+  --shadow-lg: 0 28px 60px -32px rgba(36, 39, 41, 0.34);
+
+  --font-display: 'Zodiak', 'Instrument Serif', Georgia, serif;
+  --font-ui: 'Switzer', 'Plus Jakarta Sans', 'Gilroy', system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --sidebar-width: 258px;
+  --sidebar-collapsed: 76px;
+  --header-height: 62px;
+}
+
+/* ------------------------------- shell ------------------------------- */
+
+.ws-root {
+  min-height: 100vh;
+  background: var(--surface-muted);
+  color: var(--ink);
+  font-family: var(--font-ui);
+}
+
+.ws-shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-collapsed) minmax(0, 1fr);
+  min-height: 100vh;
+  transition: grid-template-columns 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.ws-shell[data-expanded='true'] {
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+}
+
+@media (max-width: 1023px) {
+  .ws-shell,
+  .ws-shell[data-expanded='true'] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.ws-main {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.ws-canvas {
+  flex: 1;
+  min-width: 0;
+  padding: 24px clamp(16px, 2.2vw, 34px) 56px;
+}
+
+@media (max-width: 640px) {
+  .ws-canvas {
+    padding: 16px 14px 96px;
+  }
+}
+
+/* ------------------------------ surfaces ----------------------------- */
+
+.surface {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.surface-flat {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.surface-sunken {
+  background: var(--surface-sunken);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.surface-cream {
+  background: var(--cream-100);
+  border: 1px solid var(--cream-300);
+  border-radius: var(--radius-lg);
+}
+
+.surface-sky {
+  background: var(--sky-100);
+  border: 1px solid var(--sky-200);
+  border-radius: var(--radius-lg);
+}
+
+.surface-ink {
+  background: var(--ink);
+  color: var(--white);
+  border-radius: var(--radius-lg);
+}
+
+.hairline {
+  border-color: var(--line);
+}
+
+/* ------------------------------- type -------------------------------- */
+
+.display-xl {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(30px, 3.4vw, 46px);
+  line-height: 1.04;
+  letter-spacing: -0.028em;
+}
+
+.display-lg {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(24px, 2.4vw, 34px);
+  line-height: 1.1;
+  letter-spacing: -0.024em;
+}
+
+.display-md {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(19px, 1.5vw, 24px);
+  line-height: 1.18;
+  letter-spacing: -0.018em;
+}
+
+.stat-figure {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 2.2vw, 34px);
+  line-height: 1;
+  letter-spacing: -0.022em;
+  font-variant-numeric: tabular-nums;
+}
+
+.label-xs {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-60);
+}
+
+.text-muted {
+  color: var(--ink-60);
+}
+
+.text-soft {
+  color: var(--ink-45);
+}
+
+/* Deep sky is the only "interactive blue" in the palette. Tailwind's own sky
+   scale is replaced by the locked brand sky, so links use this token instead. */
+.text-link {
+  color: var(--sky-700);
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------ controls ----------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 16px;
+  border: 1px solid transparent;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--ink);
+  color: var(--white);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #14171a;
+}
+
+.btn-secondary {
+  background: var(--white);
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--surface-sunken);
+}
+
+.btn-sky {
+  background: var(--sky-300);
+  color: var(--ink);
+  border-color: var(--sky-400);
+}
+
+.btn-sky:hover:not(:disabled) {
+  background: var(--sky-400);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-70);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: rgba(36, 39, 41, 0.05);
+  color: var(--ink);
+}
+
+.btn-danger {
+  background: #7d2b2b;
+  color: var(--white);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #652020;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.btn-xs {
+  padding: 4px 10px;
+  font-size: 11px;
+}
+
+.btn-lg {
+  padding: 12px 22px;
+  font-size: 14px;
+}
+
+.icon-btn {
+  display: inline-flex;
+  height: 34px;
+  width: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--white);
+  color: var(--ink-70);
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+  cursor: pointer;
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: var(--surface-sunken);
+  color: var(--ink);
+}
+
+.icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ------------------------------- fields ------------------------------ */
+
+.field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-80);
+  margin-bottom: 6px;
+}
+
+.field-input,
+.field-select,
+.field-textarea {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  padding: 9px 12px;
+  font-size: 13.5px;
+  color: var(--ink);
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.field-input::placeholder,
+.field-textarea::placeholder {
+  color: var(--ink-45);
+}
+
+.field-input:focus,
+.field-select:focus,
+.field-textarea:focus {
+  outline: none;
+  border-color: var(--sky-500);
+  box-shadow: 0 0 0 3px rgba(174, 217, 240, 0.45);
+}
+
+.field-input[aria-invalid='true'],
+.field-textarea[aria-invalid='true'],
+.field-select[aria-invalid='true'] {
+  border-color: #9d3c3c;
+  box-shadow: 0 0 0 3px rgba(157, 60, 60, 0.12);
+}
+
+.field-textarea {
+  min-height: 92px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.field-hint {
+  font-size: 11.5px;
+  color: var(--ink-60);
+  margin-top: 5px;
+}
+
+.field-error {
+  font-size: 11.5px;
+  color: #8c2f2f;
+  margin-top: 5px;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-80);
+}
+
+.checkbox-row input[type='checkbox'] {
+  margin-top: 2px;
+  height: 16px;
+  width: 16px;
+  accent-color: var(--ink);
+  flex-shrink: 0;
+}
+
+/* ------------------------------- badges ------------------------------ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--white);
+  padding: 2px 9px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-70);
+  white-space: nowrap;
+}
+
+.badge-sky {
+  background: var(--sky-100);
+  border-color: var(--sky-200);
+  color: var(--sky-700);
+}
+
+.badge-cream {
+  background: var(--cream-100);
+  border-color: var(--cream-300);
+  color: var(--cream-700);
+}
+
+.badge-ink {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--white);
+}
+
+.badge-outline {
+  background: transparent;
+}
+
+.badge-good {
+  background: #eef5ec;
+  border-color: #cfe0c9;
+  color: #375f34;
+}
+
+.badge-warn {
+  background: var(--cream-100);
+  border-color: #e3d5a8;
+  color: #7a6220;
+}
+
+.badge-danger {
+  background: #fbeeee;
+  border-color: #e8c9c9;
+  color: #8c2f2f;
+}
+
+.dot {
+  height: 6px;
+  width: 6px;
+  border-radius: 999px;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* -------------------------------- table ------------------------------ */
+
+.data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+}
+
+.data-table thead th {
+  text-align: left;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-60);
+  font-weight: 500;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-muted);
+  white-space: nowrap;
+}
+
+.data-table tbody td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+  color: var(--ink-80);
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.data-table tbody tr:hover td {
+  background: rgba(174, 217, 240, 0.12);
+}
+
+.data-table .align-right {
+  text-align: right;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+/* ------------------------------- tabs -------------------------------- */
+
+.tab-row {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line);
+  scrollbar-width: none;
+}
+
+.tab-row::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  position: relative;
+  padding: 9px 12px 11px;
+  font-size: 13px;
+  color: var(--ink-60);
+  white-space: nowrap;
+  border-bottom: 1.5px solid transparent;
+  transition: color 140ms ease, border-color 140ms ease;
+  cursor: pointer;
+  background: transparent;
+}
+
+.tab[aria-selected='true'] {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+  font-weight: 500;
+}
+
+.tab:hover {
+  color: var(--ink);
+}
+
+/* ------------------------------ skeleton ----------------------------- */
+
+.skeleton {
+  background: linear-gradient(90deg, rgba(36, 39, 41, 0.06) 25%, rgba(36, 39, 41, 0.11) 37%, rgba(36, 39, 41, 0.06) 63%);
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+  border-radius: var(--radius-xs);
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
+/* ---------------------------- exam palette --------------------------- */
+
+.palette-btn {
+  height: 32px;
+  width: 32px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 120ms ease;
+  cursor: pointer;
+}
+
+.palette-btn:hover {
+  transform: translateY(-1px);
+}
+
+.palette-not-visited {
+  background: #eef0f1;
+  color: var(--ink-80);
+  border-color: #dcdfe1;
+}
+
+.palette-not-answered {
+  background: #ffffff;
+  color: #8c2f2f;
+  border-color: #c99b9b;
+  border-width: 1.5px;
+}
+
+.palette-answered {
+  background: #dfeeda;
+  color: #2f5c2b;
+  border-color: #b9d5b1;
+}
+
+.palette-marked {
+  background: var(--cream-100);
+  color: #7a6220;
+  border-color: #d9c78d;
+  border-width: 1.5px;
+}
+
+.palette-answered-marked {
+  background: #dfeeda;
+  color: #2f5c2b;
+  border-color: #b9d5b1;
+  position: relative;
+}
+
+.palette-answered-marked::after {
+  content: '';
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  height: 5px;
+  width: 5px;
+  border-radius: 999px;
+  background: #8a6d1f;
+}
+
+.palette-current {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+
+/* --------------------------- exam no-scroll -------------------------- */
+
+.exam-viewport {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+  overflow: hidden;
+  z-index: 40;
+}
+
+.exam-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 306px;
+}
+
+@media (max-width: 1023px) {
+  .exam-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.exam-question-scroll {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* ------------------------------ classroom ---------------------------- */
+
+.stage-dark {
+  background: #17191b;
+  color: var(--white);
+}
+
+.stage-grid {
+  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.07) 1px, transparent 0);
+  background-size: 22px 22px;
+}
+
+.chat-scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.thin-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: rgba(36, 39, 41, 0.2);
+  border-radius: 999px;
+}
+
+/* ---------------------------- misc helpers --------------------------- */
+
+.focus-ring:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.divider {
+  height: 1px;
+  background: var(--line);
+}
+
+.grain {
+  background-image:
+    radial-gradient(ellipse 60% 50% at 20% 0%, rgba(174, 217, 240, 0.5), transparent 70%),
+    radial-gradient(ellipse 50% 60% at 90% 10%, rgba(245, 240, 223, 0.7), transparent 70%);
+}
