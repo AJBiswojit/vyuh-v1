@@ -13,7 +13,13 @@
     "audit:interactions": "node tools/audit-interactions.mjs",
     "audit:flows": "node tools/audit-flows.mjs",
     "audit:workflows": "node tools/audit-workflows.mjs",
-    "verify": "node tools/check-imports.mjs && oxlint src && vite build"
+    "verify": "node tools/check-imports.mjs && oxlint src && vite build",
+    "audit:sections": "node tools/audit-sections.mjs --role student && node tools/audit-sections.mjs --role faculty && node tools/audit-sections.mjs --role admin",
+    "audit:errors": "node tools/audit-error-states.mjs",
+    "audit:session": "node tools/audit-session.mjs",
+    "audit:paint": "node tools/audit-paint.mjs",
+    "audit:responsive": "node tools/audit-responsive.mjs",
+    "audit:rerender": "node tools/audit-rerender.mjs"
   },
   "dependencies": {
     "framer-motion": "^14.12.0",
