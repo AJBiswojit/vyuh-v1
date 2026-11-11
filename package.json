@@ -19,7 +19,11 @@
     "audit:session": "node tools/audit-session.mjs",
     "audit:paint": "node tools/audit-paint.mjs",
     "audit:responsive": "node tools/audit-responsive.mjs",
-    "audit:rerender": "node tools/audit-rerender.mjs"
+    "audit:rerender": "node tools/audit-rerender.mjs",
+    "audit:deployment": "node tools/audit-deployment.mjs",
+    "audit:visual": "node tools/audit-visual-system.mjs",
+    "audit:css": "node tools/audit-css-coverage.mjs",
+    "audit:identity": "node tools/audit-identity.mjs"
   },
   "dependencies": {
     "framer-motion": "^14.12.0",

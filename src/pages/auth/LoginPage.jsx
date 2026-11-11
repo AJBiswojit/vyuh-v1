@@ -41,9 +41,22 @@ export default function LoginPage() {
   const [error, setError] = useState(null)
   const [pending, setPending] = useState(false)
   const [demoAccounts, setDemoAccounts] = useState([])
-  const [showDemo, setShowDemo] = useState(false)
+  /* Open by default: the credential panel is the first thing a reviewer needs,
+     and a collapsed accordion reads as "the section is missing". */
+  const [showDemo, setShowDemo] = useState(true)
 
-  const isDev = import.meta.env.DEV
+  /* Demo credentials are shown in the deployed build as well as locally.
+
+     Vyuh signs in against a seeded mock service layer, so these are the demo
+     records from src/data/mock/users.mock.js — not real accounts — and exposing
+     them is the documented behaviour of this demonstration. They are *always*
+     read from the seeded store via authService.getDemoAccounts(), never
+     hard-coded here.
+
+     `VITE_SHOW_DEMO_ACCOUNTS=false` hides the panel (for a build pointed at a
+     real backend); it defaults to visible so the deployed preview and local
+     development behave identically. */
+  const showDemoAccounts = import.meta.env.VITE_SHOW_DEMO_ACCOUNTS !== 'false'
 
   /* Nobody who is already signed in should be looking at a sign-in form —
      but this effect is deliberately NOT allowed to fight with submit(): while a
@@ -56,9 +69,9 @@ export default function LoginPage() {
   }, [isAuthenticated, session, pending, location.state, navigate])
 
   useEffect(() => {
-    if (!isDev) return
+    if (!showDemoAccounts) return
     authService.getDemoAccounts().then(setDemoAccounts).catch(() => setDemoAccounts([]))
-  }, [isDev])
+  }, [showDemoAccounts])
 
   const submit = async (event) => {
     event.preventDefault()
@@ -228,7 +241,7 @@ export default function LoginPage() {
                 </Button>
               </form>
 
-              {isDev ? (
+              {showDemoAccounts ? (
                 <div className="mt-6 rounded-[14px] border border-dashed border-[var(--line-strong)] bg-[var(--surface-muted)] p-3.5">
                   <button
                     type="button"
@@ -238,15 +251,15 @@ export default function LoginPage() {
                   >
                     <span className="flex items-center gap-1.5 text-[11.5px] font-medium text-ink">
                       <Info className="h-3.5 w-3.5" aria-hidden="true" />
-                      Development demo accounts
+                      Demo accounts
                     </span>
                     <span className="text-[10px] uppercase tracking-wide text-soft">{showDemo ? 'Hide' : 'Show'}</span>
                   </button>
                   {showDemo ? (
                     <div className="mt-2.5 space-y-1.5">
                       <p className="text-[10.5px] leading-snug text-muted">
-                        Development build only. Passwords are never shown in normal product screens; this panel fills the
-                        seeded demo credential so reviewers can enter each workspace.
+                        These are seeded demonstration records, not real accounts, and Vyuh signs in against a local mock
+                        service layer. Pick a role to fill its credentials, then sign in.
                       </p>
                       {demoAccounts.map((account) => (
                         <button

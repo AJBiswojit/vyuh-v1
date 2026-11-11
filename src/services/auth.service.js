@@ -11,7 +11,7 @@ import {
   verifyPassword,
   hashPassword,
 } from '../data/mock/mock-storage.js'
-import { DEMO_PASSWORD } from '../data/mock/users.mock.js'
+import { DEMO_PASSWORD, USERS } from '../data/mock/users.mock.js'
 import { STORAGE_KEY as STORE_KEY } from '../data/mock/mock-storage.js'
 import { validatePassword } from '../lib/validation.js'
 
@@ -251,10 +251,15 @@ export const authService = {
   },
 
   async getDemoAccounts() {
+    /* Read from the seeded store, but fall back to the seed itself if the store
+       was cleared (a reset, a new browser, private mode). The account list is a
+       documented part of this demonstration, so it must not depend on storage
+       having been initialised first. */
     const store = loadStore()
-    const student = store.users.find((user) => user.id === 'stu_001')
-    const faculty = store.users.find((user) => user.id === 'fac_001')
-    const admin = store.users.find((user) => user.id === 'admin_001')
+    const find = (id) => store.users?.find((user) => user.id === id) || USERS.find((user) => user.id === id)
+    const student = find('stu_001')
+    const faculty = find('fac_001')
+    const admin = find('admin_001')
     return [
       { role: 'student', label: 'Student', name: student?.name, email: student?.email },
       { role: 'faculty', label: 'Faculty', name: faculty?.name, email: faculty?.email },
