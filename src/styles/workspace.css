@@ -1790,3 +1790,428 @@ a.stat-tile:hover,
     font-size: 13px;
   }
 }
+
+/* ------------------------------------------------------------------
+   Shared workspace shell — sidebar footer and notification inbox
+   Scoped `.ws-sidebar-*` / `.notif-*` classes, applied by the single
+   WorkspaceLayout used by Student, Faculty and Institute Admin.
+------------------------------------------------------------------- */
+
+/* The account footer replaces the old personal identity block: one link to
+   the existing account page and one sign-out action, with no repeated avatar,
+   name, role badge or enrolment identifier. */
+.ws-sidebar-foot {
+  border-top: 1px solid var(--line);
+  padding: 10px 12px;
+}
+
+.ws-sidebar-foot--compact {
+  padding: 8px;
+}
+
+.ws-sidebar-foot-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ws-sidebar-action {
+  display: inline-flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink-70);
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.ws-sidebar-action:hover {
+  border-color: var(--sky-200);
+  background: var(--sky-50);
+  color: var(--sky-800);
+}
+
+.ws-sidebar-action--signout:hover {
+  border-color: var(--bad-300);
+  background: var(--bad-50);
+  color: var(--bad-700);
+}
+
+.ws-sidebar-action:disabled,
+.ws-sidebar-icon:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ws-sidebar-icon {
+  display: inline-flex;
+  height: 30px;
+  width: 30px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink-60);
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.ws-sidebar-icon:hover {
+  border-color: var(--sky-200);
+  background: var(--sky-50);
+  color: var(--sky-800);
+}
+
+.ws-sidebar-icon--signout:hover {
+  border-color: var(--bad-300);
+  background: var(--bad-50);
+  color: var(--bad-700);
+}
+
+/* --------------------------- notification panel -------------------------- */
+
+.notif-panel {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.notif-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 12px 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.notif-heading {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 17px;
+  line-height: 1.15;
+  color: var(--ink);
+}
+
+.notif-count {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border: 1px solid var(--sky-200);
+  border-radius: 999px;
+  background: var(--sky-100);
+  color: var(--sky-800);
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.notif-count[data-unread-count='0'] {
+  border-color: var(--line);
+  background: var(--surface-sunken);
+  color: var(--ink-45);
+}
+
+.notif-close {
+  display: inline-flex;
+  height: 24px;
+  width: 24px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: var(--ink-45);
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.notif-close:hover {
+  background: var(--surface-sunken);
+  color: var(--ink);
+}
+
+.notif-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 12px 6px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-muted);
+}
+
+.notif-toolbar-hint {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-45);
+}
+
+.notif-mark-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--sky-800);
+  font-size: 10.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+
+.notif-mark-all:hover:not(:disabled) {
+  border-color: var(--sky-200);
+  background: var(--sky-50);
+}
+
+.notif-mark-all:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Independent scrolling: only the list scrolls, header and toolbar stay put. */
+.notif-scroll {
+  max-height: min(70vh, 420px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.notif-group-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--line-soft);
+  background: var(--surface-muted);
+  color: var(--ink-45);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.notif-group-label[data-group='high'] {
+  color: var(--warn-800);
+}
+
+.notif-group-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-30);
+}
+
+/* Priority drives the warm/sky surface; read state drives emphasis. They are
+   deliberately independent, so a read important item stays warm and labelled. */
+.notif-row {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px 10px 14px;
+  border-bottom: 1px solid var(--line-soft);
+  text-decoration: none;
+  transition: background 150ms ease;
+}
+
+.notif-group .notif-row:last-child {
+  border-bottom: 0;
+}
+
+.notif-rail {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: transparent;
+}
+
+.notif-row[data-priority='high'] {
+  background: var(--warn-50);
+}
+
+.notif-row[data-priority='high'] .notif-rail {
+  background: var(--warn-500);
+}
+
+/* An unread important row keeps its warm surface but borrows the sky accent
+   rail, so both properties remain visible at a glance. */
+.notif-row[data-priority='high'][data-read='false'] .notif-rail {
+  background: var(--sky-500);
+}
+
+.notif-row[data-priority='high'][data-read='true'] {
+  background: var(--cream-50);
+}
+
+.notif-row[data-priority='high'][data-read='true'] .notif-rail {
+  background: var(--cream-500);
+}
+
+.notif-row[data-priority='normal'][data-read='false'] {
+  background: var(--sky-50);
+}
+
+.notif-row[data-priority='normal'][data-read='false'] .notif-rail {
+  background: var(--sky-500);
+}
+
+.notif-row[data-priority='normal'][data-read='true'] {
+  background: var(--surface);
+}
+
+.notif-row[data-priority='high']:hover {
+  background: var(--warn-100);
+}
+
+.notif-row[data-priority='high'][data-read='true']:hover {
+  background: var(--cream-100);
+}
+
+.notif-row[data-priority='normal']:hover {
+  background: var(--sky-100);
+}
+
+.notif-icon {
+  display: inline-flex;
+  height: 28px;
+  width: 28px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--sky-200);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--sky-800);
+}
+
+.notif-row[data-priority='high'] .notif-icon {
+  border-color: var(--warn-300);
+  background: var(--warn-50);
+  color: var(--warn-800);
+}
+
+.notif-row[data-read='true'] .notif-icon {
+  border-color: var(--line);
+  background: var(--surface-muted);
+  color: var(--ink-45);
+}
+
+.notif-content {
+  display: block;
+  min-width: 0;
+  flex: 1;
+}
+
+.notif-headline {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.notif-title {
+  min-width: 0;
+  flex: 1;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--ink);
+}
+
+.notif-row[data-priority='high'] .notif-title {
+  font-weight: 600;
+}
+
+.notif-row[data-read='true'] .notif-title {
+  font-weight: 400;
+  color: var(--ink-70);
+}
+
+.notif-priority {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 6px;
+  border: 1px solid var(--warn-300);
+  border-radius: 999px;
+  background: var(--warn-100);
+  color: var(--warn-800);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.notif-row[data-read='true'] .notif-priority {
+  border-color: var(--cream-300);
+  background: var(--cream-200);
+  color: var(--cream-800);
+}
+
+.notif-unread {
+  height: 6px;
+  width: 6px;
+  flex-shrink: 0;
+  margin-top: 5px;
+  border-radius: 999px;
+  background: var(--sky-600);
+}
+
+.notif-body {
+  margin-top: 3px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--ink-60);
+}
+
+.notif-row[data-read='true'] .notif-body {
+  color: var(--ink-45);
+}
+
+.notif-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-45);
+}
+
+.notif-row[data-read='true'] .notif-meta {
+  color: var(--ink-30);
+}
+
+.notif-category {
+  color: var(--sky-800);
+}
+
+.notif-row[data-read='true'] .notif-category {
+  color: var(--ink-45);
+}
+
+@media (max-width: 640px) {
+  .notif-scroll {
+    max-height: min(64vh, 380px);
+  }
+
+  .notif-heading {
+    font-size: 16px;
+  }
+}

@@ -1,7 +1,8 @@
 /* Single source of truth for workspace navigation.
-   Labels are identical everywhere in the product (sidebar, mobile nav, command
-   palette, breadcrumbs) and the counts match the specification exactly:
-   Student 9 · Faculty 10 · Institute Admin 11. */
+   Labels are identical everywhere in the product (sidebar, mobile nav and
+   command palette) and the counts match the specification exactly:
+   Student 9 · Faculty 10 · Institute Admin 11. The shared header carries no
+   breadcrumb; `activeNavItem` resolves the highlighted sidebar entry only. */
 
 import {
   LayoutDashboard,
@@ -82,6 +83,14 @@ export const ROLE_HOME = {
   student: '/student/dashboard',
   faculty: '/faculty/dashboard',
   admin: '/admin/overview',
+}
+
+/** The single account destination per workspace. The shell footer links here
+ *  instead of repeating a profile identity block in the header. */
+export const ACCOUNT_PATH = {
+  student: '/student/profile',
+  faculty: '/faculty/account',
+  admin: '/admin/account',
 }
 
 /** Resolves the active navigation entry, including nested detail routes. */

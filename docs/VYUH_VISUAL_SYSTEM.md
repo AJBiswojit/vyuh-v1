@@ -101,7 +101,7 @@ Recharts swatches.
 
 ## 6. Account identity
 
-Unchanged in structure (one source: `src/ui/account-identity.jsx`) but retuned:
+The role colour source is still `src/ui/account-identity.jsx`:
 
 | Role | Chip | Avatar |
 | --- | --- | --- |
@@ -109,10 +109,26 @@ Unchanged in structure (one source: `src/ui/account-identity.jsx`) but retuned:
 | Faculty | `--cream-200` / `--cream-800` | `--cream-300` tint |
 | Institute admin | `--sky-900` / white | `--sky-900` |
 
-Admin moved from charcoal to the deepest brand blue so that "high contrast"
-means "deepest brand colour" rather than black. `RoleBadge` was added for the
-user-management table: same family, plus a status dot, so account tables show
-role colour instead of a grey tag.
+Admin uses the deepest brand blue so that "high contrast" means "deepest
+brand colour" rather than black. `RoleBadge` adds a status dot for the
+user-management table. The personal `AccountIdentity` block was removed from
+the header, desktop sidebar footer and mobile drawer in the shared
+`WorkspaceLayout`: account pages, the student dashboard profile card and user
+tables remain the surfaces that show identity. The shell footer now exposes
+only Account and Sign out; see `docs/VYUH_ACCOUNT_IDENTITY.md`.
+
+## 6b. Notification hierarchy
+
+`NotificationInbox` and scoped `.notif-*` CSS in `workspace.css` separate
+priority from read state. Priority is derived from the existing service
+`type` / `title` / `body` in `src/lib/notification-visual.js` — no new
+notification arrays and no new service field. Important rows use a warm
+`--warn-50` / `--cream-50` wash and an "Important" chip; their rail is sky
+while unread and cream once read. Normal rows use white / `--sky-50`.
+Unread rows add a sky rail and dot with a stronger title; read rows soften
+the title, description and timestamp and remove the dot. Important stays identifiable after being read. Icons and
+category labels distinguish exam, class, recording, doubt, institute and
+other existing event types. See `docs/VYUH_GLOBAL_UI.md`.
 
 ## 7. Screen-by-screen
 
@@ -173,15 +189,17 @@ Results after this pass:
 | --- | --- |
 | `audit-visual-system.mjs` | pass — 6 screens, 17 contrast pairs AA, ≤1 focal panel |
 | `audit-css-coverage.mjs` | pass — 17 classes, 29 tokens, 27 utilities in the bundle |
-| `audit-identity.mjs` | pass — 12 surfaces across 3 roles |
+| `audit-identity.mjs` | pass — 4 identity surfaces, 3 roles, shell identity removed |
+| `audit-workspace-shell.mjs` | pass — 45 checks across 3 roles (see `docs/VYUH_GLOBAL_UI.md`) |
+| `audit-header.mjs` | pass — 12 rendered-header checks, 10 routes, snapshots in `docs/VYUH_HEADER_AUDIT.md` |
 | `audit-routes.mjs` | ALL CLEAR (37 routes) |
 | `audit-sections.mjs` | clean |
 | `audit-interactions.mjs` | ALL CLEAR |
 | `audit-responsive.mjs` | pass — 17 reachable links per role |
 | `audit-workflows.mjs` | ALL WORKFLOWS PASS |
-| `check-imports.mjs` | ok — 131 files |
+| `check-imports.mjs` | ok — 132 files |
 | `oxlint src` | 0 errors, 34 advisory warnings (pre-existing) |
-| `npm run build` | built in ~1.7 s |
+| `npm run build` | built in ~1.9 s |
 
 ## 9. What was not touched
 
