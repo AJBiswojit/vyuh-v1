@@ -105,6 +105,21 @@ export default function FacultyAttendancePage() {
     )
   }
 
+  /* No data and no error can happen when the request resolved to null; treat it
+     as a failure rather than rendering an attendance register of zeros. */
+  if (!data) {
+    return (
+      <div>
+        <PageHeader eyebrow="Faculty workspace" title="Attendance" />
+        <ErrorState
+          error={{ message: 'The attendance register is unavailable right now.' }}
+          onRetry={refresh}
+          title="Attendance could not be loaded"
+        />
+      </div>
+    )
+  }
+
   const totals = sessions.reduce(
     (accumulator, session) => {
       accumulator.records += session.records.length

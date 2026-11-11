@@ -348,10 +348,16 @@ export default function QuestionBankPage() {
         </Button>
       </div>
 
-      {loading ? (
+      {loading && !data ? (
         <LoadingBlock rows={6} />
       ) : error ? (
         <ErrorState error={error} onRetry={refresh} title="The question bank could not be loaded" />
+      ) : !data ? (
+        <ErrorState
+          error={{ message: 'The question bank is unavailable right now.' }}
+          onRetry={refresh}
+          title="The question bank could not be loaded"
+        />
       ) : questions.length === 0 ? (
         <div className="surface-flat">
           <EmptyState

@@ -96,10 +96,18 @@ export default function ExamsListPage() {
         }
       />
 
-      {loading ? (
+      {/* Error first: a failed request must never fall through to the "no
+          examinations" empty state, which reads as if the student had none. */}
+      {loading && !data ? (
         <SkeletonCards count={3} />
       ) : error ? (
         <ErrorState error={error} onRetry={refresh} title="Examinations could not be loaded" />
+      ) : !data ? (
+        <ErrorState
+          error={{ message: 'The examination list is unavailable right now.' }}
+          onRetry={refresh}
+          title="Examinations could not be loaded"
+        />
       ) : (
         <>
           {data.inProgress.length ? (

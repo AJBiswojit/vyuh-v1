@@ -54,6 +54,19 @@ export default function FacultyDoubtsPage() {
     )
   }
 
+  if (!data) {
+    return (
+      <div>
+        <PageHeader eyebrow="Faculty workspace" title="Doubts" />
+        <ErrorState
+          error={{ message: 'The doubt inbox is unavailable right now.' }}
+          onRetry={refresh}
+          title="The doubt inbox could not be loaded"
+        />
+      </div>
+    )
+  }
+
   const stats = data.stats
   const counts = { open: stats.open, answered: stats.answered, resolved: stats.resolved, all: data.doubts.length }
 
