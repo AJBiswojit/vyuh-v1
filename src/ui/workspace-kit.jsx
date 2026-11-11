@@ -5,7 +5,7 @@ import { ArrowUpRight } from 'lucide-react'
 /* Shared workspace building blocks: page header, bento tiles, status badges,
    progress bars, timelines and list rows. */
 
-export function PageHeader({ eyebrow, title, description, actions, backTo, backLabel }) {
+export function PageHeader({ eyebrow, eyebrowTone = 'sky', title, description, actions, backTo, backLabel }) {
   return (
     <div className="mb-5">
       {backTo ? (
@@ -15,7 +15,11 @@ export function PageHeader({ eyebrow, title, description, actions, backTo, backL
       ) : null}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
-          {eyebrow ? <p className="label-xs mb-1.5">{eyebrow}</p> : null}
+          {eyebrow ? (
+            <p className="page-eyebrow mb-2" data-tone={eyebrowTone}>
+              {eyebrow}
+            </p>
+          ) : null}
           <h1 className="display-lg text-ink">{title}</h1>
           {description ? <p className="mt-1.5 max-w-2xl text-[12.5px] leading-relaxed text-muted">{description}</p> : null}
         </div>
@@ -26,13 +30,13 @@ export function PageHeader({ eyebrow, title, description, actions, backTo, backL
 }
 
 const TONE_CLASS = {
-  sky: 'bg-[var(--sky-100)] text-[#245268] border-[var(--sky-200)]',
-  cream: 'bg-[var(--cream-100)] text-[#6b5c33] border-[var(--cream-300)]',
-  ink: 'bg-[var(--ink)] text-white border-[var(--ink)]',
-  good: 'bg-[#eef5ec] text-[#375f34] border-[#cfe0c9]',
-  warn: 'bg-[var(--cream-100)] text-[#7a6220] border-[#e3d5a8]',
-  danger: 'bg-[#fbeeee] text-[#8c2f2f] border-[#e8c9c9]',
-  neutral: 'bg-white text-[var(--ink-70)] border-[var(--line)]',
+  sky: '!bg-[var(--sky-100)] !text-[var(--sky-800)] !border-[var(--sky-200)]',
+  cream: '!bg-[var(--cream-200)] !text-[var(--cream-800)] !border-[var(--cream-300)]',
+  ink: '!bg-[var(--sky-900)] !text-white !border-[var(--sky-900)]',
+  good: '!bg-[var(--good-100)] !text-[var(--good-800)] !border-[var(--good-300)]',
+  warn: '!bg-[var(--warn-100)] !text-[var(--warn-800)] !border-[var(--warn-300)]',
+  danger: '!bg-[var(--bad-100)] !text-[var(--bad-700)] !border-[var(--bad-300)]',
+  neutral: '!bg-[var(--surface-sunken)] !text-[var(--ink-80)] !border-[var(--line-strong)]',
 }
 
 export function StatusBadge({ tone = 'neutral', children, dot = false, className = '' }) {
@@ -47,14 +51,14 @@ export function StatusBadge({ tone = 'neutral', children, dot = false, className
 export function statusTone(status) {
   const map = {
     published: 'good',
-    completed: 'neutral',
+    completed: 'sky',
     live: 'danger',
     'in-progress': 'sky',
-    draft: 'neutral',
+    draft: 'cream',
     scheduled: 'sky',
     cancelled: 'danger',
-    archived: 'neutral',
-    ended: 'neutral',
+    archived: 'cream',
+    ended: 'sky',
     'recording-processing': 'warn',
     'recording-published': 'good',
     active: 'good',
@@ -62,13 +66,13 @@ export function statusTone(status) {
     open: 'warn',
     answered: 'sky',
     resolved: 'good',
-    closed: 'neutral',
+    closed: 'cream',
     pending: 'warn',
     approved: 'good',
     rejected: 'danger',
     expired: 'warn',
     submitted: 'good',
-    'not-started': 'neutral',
+    'not-started': 'cream',
     present: 'good',
     absent: 'danger',
     partial: 'warn',
@@ -77,11 +81,11 @@ export function statusTone(status) {
     flagged: 'warn',
     removed: 'danger',
     'pending-approval': 'warn',
-    'window-closed': 'neutral',
+    'window-closed': 'cream',
     upcoming: 'sky',
     'live-window': 'danger',
     processing: 'warn',
-    unpublished: 'neutral',
+    unpublished: 'cream',
     restricted: 'danger',
     'in-progress-ticket': 'warn',
   }
@@ -96,6 +100,20 @@ export function statusLabel(status) {
     .join(' ')
 }
 
+const BENTO_TONE = {
+  default: { className: 'surface', rule: 'sky', deep: false },
+  sky: { className: 'surface-sky-rail', rule: 'sky', deep: false },
+  cream: { className: 'surface-cream-rail', rule: 'cream', deep: false },
+  deep: { className: 'surface-deep', rule: 'deep', deep: true },
+  ink: { className: 'surface-deep', rule: 'deep', deep: true },
+}
+
+/**
+ * Bento tile. `tone` chooses the surface family: white (default), sky
+ * information, cream reflection, or deep blue for the single focal panel on a
+ * screen. Deep panels are styled explicitly at the call site; the others share
+ * one typographic scale so tiles read as a family.
+ */
 export function BentoCard({
   eyebrow,
   title,
@@ -108,27 +126,26 @@ export function BentoCard({
   delay = 0,
 }) {
   const reduceMotion = useReducedMotion()
-  const toneClass =
-    tone === 'sky'
-      ? 'surface-sky'
-      : tone === 'cream'
-        ? 'surface-cream'
-        : tone === 'ink'
-          ? 'surface-ink'
-          : 'surface'
+  const config = BENTO_TONE[tone] || BENTO_TONE.default
+  const deep = config.deep
   return (
     <motion.section
       initial={reduceMotion ? false : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.34, delay, ease: [0.22, 0.61, 0.36, 1] }}
-      className={`${toneClass} ${span} flex flex-col p-4 sm:p-[18px] ${className}`}
+      className={`${config.className} ${span} flex flex-col p-4 sm:p-[18px] ${className}`}
+      data-tone={tone}
     >
       {(eyebrow || title || action) ? (
         <div className="mb-3 flex items-start justify-between gap-2">
           <div className="min-w-0">
-            {eyebrow ? <p className={`label-xs ${tone === 'ink' ? 'text-white/60' : ''}`}>{eyebrow}</p> : null}
+            {eyebrow ? (
+              <p className={deep ? 'text-[9.5px] font-medium uppercase tracking-[0.16em] text-white/70' : 'label-xs'}>
+                {eyebrow}
+              </p>
+            ) : null}
             {title ? (
-              <h2 className={`mt-0.5 text-[14px] font-medium leading-snug ${tone === 'ink' ? 'text-white' : 'text-ink'}`}>
+              <h2 className={`mt-0.5 text-[14px] font-medium leading-snug ${deep ? 'text-white' : 'text-ink'}`}>
                 {title}
               </h2>
             ) : null}
@@ -137,15 +154,65 @@ export function BentoCard({
         </div>
       ) : null}
       <div className="min-h-0 flex-1">{children}</div>
-      {footer ? <div className={`mt-3 border-t pt-2.5 ${tone === 'ink' ? 'border-white/15' : 'border-[var(--line)]'}`}>{footer}</div> : null}
+      {footer ? (
+        <div className={`mt-3 border-t pt-2.5 ${deep ? 'border-white/20' : tone === 'cream' ? 'border-[var(--cream-300)]' : 'border-[var(--line)]'}`}>
+          {footer}
+        </div>
+      ) : null}
     </motion.section>
+  )
+}
+
+/**
+ * Number tile used by dashboards. Tone maps to meaning: white neutral, cream
+ * reflective, sky informational, deep for the leading metric on a page.
+ */
+export function StatTile({ label, value, hint, icon: Icon, tone = 'default', to, className = '' }) {
+  const body = (
+    <>
+      <div className="flex items-start justify-between gap-2">
+        <p className="label-xs">{label}</p>
+        {Icon ? (
+          <span className="stat-icon" data-tone={tone === 'deep' ? 'deep' : tone === 'cream' ? 'cream' : tone === 'good' ? 'good' : tone === 'warn' ? 'warn' : 'sky'}>
+            <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+          </span>
+        ) : null}
+      </div>
+      <p className="stat-figure mt-2 text-ink">{value}</p>
+      {hint ? <p className="stat-tile-hint">{hint}</p> : null}
+    </>
+  )
+  const toneAttr = tone === 'default' ? undefined : tone
+  if (to) {
+    return (
+      <Link to={to} className={`stat-tile ${className}`} data-tone={toneAttr}>
+        {body}
+      </Link>
+    )
+  }
+  return (
+    <div className={`stat-tile ${className}`} data-tone={toneAttr}>
+      {body}
+    </div>
   )
 }
 
 export function ProgressBar({ value, max = 100, tone = 'ink', height = 6, label, className = '' }) {
   const pct = Math.max(0, Math.min(100, max ? (value / max) * 100 : 0))
   const fill =
-    tone === 'sky' ? 'bg-[var(--sky-500)]' : tone === 'good' ? 'bg-[#4c7a45]' : tone === 'danger' ? 'bg-[#9d3c3c]' : tone === 'warn' ? 'bg-[#b08d31]' : 'bg-[var(--ink)]'
+    tone === 'sky'
+      ? 'bg-[var(--sky-500)]'
+      : tone === 'deep'
+        ? 'bg-[var(--sky-800)]'
+        : tone === 'good'
+          ? 'bg-[var(--good-500)]'
+          : tone === 'danger'
+            ? 'bg-[var(--bad-500)]'
+            : tone === 'warn'
+              ? 'bg-[var(--warn-500)]'
+              : tone === 'cream'
+                ? 'bg-[var(--cream-500)]'
+                : 'bg-[var(--sky-700)]'
   return (
     <div className={className}>
       {label ? (
@@ -154,7 +221,7 @@ export function ProgressBar({ value, max = 100, tone = 'ink', height = 6, label,
           <span className="tabular font-medium text-ink">{Math.round(pct)}%</span>
         </div>
       ) : null}
-      <div className="w-full overflow-hidden rounded-full bg-[var(--surface-sunken)]" style={{ height }}>
+      <div className="w-full overflow-hidden rounded-full bg-[var(--sky-50)]" style={{ height }}>
         <motion.div
           className={`h-full rounded-full ${fill}`}
           initial={{ width: 0 }}
@@ -170,12 +237,12 @@ export function Timeline({ items, emptyLabel = 'No activity yet' }) {
   if (!items.length) return <p className="py-6 text-center text-[12px] text-soft">{emptyLabel}</p>
   return (
     <ol className="relative space-y-3.5 pl-4">
-      <span className="absolute bottom-2 left-[5px] top-2 w-px bg-[var(--line)]" aria-hidden="true" />
+      <span className="absolute bottom-2 left-[5px] top-2 w-px bg-[var(--sky-200)]" aria-hidden="true" />
       {items.map((item) => (
         <li key={item.id} className="relative">
           <span
             className={`absolute -left-4 top-1 h-[9px] w-[9px] rounded-full border-2 border-white ${
-              item.tone === 'sky' ? 'bg-[var(--sky-500)]' : item.tone === 'warn' ? 'bg-[#b08d31]' : item.tone === 'danger' ? 'bg-[#9d3c3c]' : 'bg-[var(--ink)]'
+              item.tone === 'sky' ? 'bg-[var(--sky-500)]' : item.tone === 'warn' ? 'bg-[var(--warn-500)]' : item.tone === 'danger' ? 'bg-[var(--bad-500)]' : 'bg-[var(--sky-800)]'
             }`}
             aria-hidden="true"
           />
@@ -192,7 +259,7 @@ export function ListRow({ to, title, subtitle, meta, right, badge, icon: Icon, o
   const content = (
     <>
       {Icon ? (
-        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--surface-sunken)] text-ink-60">
+        <span className="stat-icon mt-0.5 !h-8 !w-8">
           <Icon className="h-3.5 w-3.5" aria-hidden="true" />
         </span>
       ) : null}
@@ -226,29 +293,6 @@ export function ListRow({ to, title, subtitle, meta, right, badge, icon: Icon, o
     )
   }
   return <div className={className}>{content}</div>
-}
-
-export function StatTile({ label, value, unit, hint, delta, to, tone = 'default' }) {
-  const body = (
-    <>
-      <p className="label-xs">{label}</p>
-      <p className={`stat-figure mt-2 ${tone === 'danger' ? 'text-[#8c2f2f]' : tone === 'good' ? 'text-[#375f34]' : 'text-ink'}`}>
-        {value}
-        {unit ? <span className="ml-1 font-sans text-[12px] font-normal tracking-normal text-soft">{unit}</span> : null}
-      </p>
-      {hint ? <p className="mt-1.5 text-[11px] leading-snug text-soft">{hint}</p> : null}
-      {delta ? <p className="mt-1 text-[10.5px] font-medium text-[#375f34]">{delta}</p> : null}
-    </>
-  )
-  const className = 'surface-flat block p-4 transition'
-  if (to) {
-    return (
-      <Link to={to} className={`${className} hover:border-[var(--line-strong)] hover:shadow-[var(--shadow-sm)]`}>
-        {body}
-      </Link>
-    )
-  }
-  return <div className={className}>{body}</div>
 }
 
 export function LinkedSection({ title, description, to, linkLabel, children, className = '' }) {

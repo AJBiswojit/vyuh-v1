@@ -19,8 +19,8 @@ import { questionService } from '../../services/question.service.js'
 import { performanceService } from '../../services/performance.service.js'
 import { formatDate, formatTime, relativeTime, greetingForNow } from '../../lib/time.js'
 import { ErrorState, LoadingBlock, EmptyState } from '../../ui/states.jsx'
-import { PageHeader, StatusBadge, statusLabel, statusTone } from '../../ui/workspace-kit.jsx'
-import { DonutChart } from '../../ui/charts.jsx'
+import { PageHeader, StatTile, StatusBadge, statusLabel, statusTone } from '../../ui/workspace-kit.jsx'
+import { DonutChart, CHART_TONE } from '../../ui/charts.jsx'
 
 export default function FacultyDashboardPage() {
   const { user } = useAuth()
@@ -66,6 +66,7 @@ export default function FacultyDashboardPage() {
     <div>
       <PageHeader
         eyebrow="Faculty workspace"
+        eyebrowTone="cream"
         title={`${greetingForNow()}, ${user.name.split(' ')[0]}`}
         description={`${teaching.classes.upcoming} upcoming session${teaching.classes.upcoming === 1 ? '' : 's'} · ${openDoubts.length} doubt${openDoubts.length === 1 ? '' : 's'} waiting on you.`}
         actions={
@@ -81,15 +82,20 @@ export default function FacultyDashboardPage() {
       />
 
       {liveClass ? (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[16px] bg-[var(--ink)] p-4 text-white">
-          <div className="min-w-0">
-            <p className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] text-white/60">
-              <span className="dot bg-[#9adf8f]" /> Your session is live
-            </p>
-            <p className="mt-1 text-[15px] font-medium">{liveClass.title}</p>
-            <p className="mt-0.5 text-[11.5px] text-white/70">
-              {liveClass.batch?.name} · started {relativeTime(liveClass.sessionStartedAt)}
-            </p>
+        <div className="surface-deep mb-4 flex flex-wrap items-center justify-between gap-3 p-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="stat-icon !h-9 !w-9 !border-white/25 !bg-white/15 !text-white" aria-hidden="true">
+              <Radio className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <p className="flex items-center gap-1.5 text-[9.5px] font-medium uppercase tracking-[0.16em] text-white/70">
+                <span className="dot bg-[#a6e59a]" /> Your session is live
+              </p>
+              <p className="mt-0.5 text-[15px] font-medium text-white">{liveClass.title}</p>
+              <p className="mt-0.5 text-[11.5px] text-white/70">
+                {liveClass.batch?.name} · started {relativeTime(liveClass.sessionStartedAt)}
+              </p>
+            </div>
           </div>
           <Link to={`/faculty/classes/${liveClass.id}/studio`} className="btn btn-sky btn-sm">
             Open studio <ArrowRight className="h-3.5 w-3.5" />
@@ -103,24 +109,23 @@ export default function FacultyDashboardPage() {
           { label: 'Examinations', value: teaching.exams.total, hint: `${drafts.length} draft · ${awaitingReview.length} awaiting approval`, to: '/faculty/exams', icon: ClipboardList },
           { label: 'Questions authored', value: questionStats.total, hint: `${questionStats.active} active in the bank`, to: '/faculty/question-bank', icon: BookOpen },
           { label: 'Doubts pending', value: openDoubts.length, hint: `${highPriority.length} marked high priority`, to: '/faculty/doubts', icon: MessageSquare },
-        ].map((tile) => {
-          const Icon = tile.icon
-          return (
-            <Link key={tile.label} to={tile.to} className="surface-flat p-4 transition hover:border-[var(--line-strong)]">
-              <div className="flex items-start justify-between gap-2">
-                <p className="label-xs">{tile.label}</p>
-                <Icon className="h-3.5 w-3.5 text-soft" aria-hidden="true" />
-              </div>
-              <p className="stat-figure mt-1.5 text-ink">{tile.value}</p>
-              <p className="mt-1 text-[10.5px] leading-snug text-soft">{tile.hint}</p>
-            </Link>
-          )
-        })}
+        ].map((tile, index) => (
+          <StatTile
+            key={tile.label}
+            label={tile.label}
+            value={tile.value}
+            hint={tile.hint}
+            icon={tile.icon}
+            to={tile.to}
+            tone={index === 0 ? 'sky' : index === 2 ? 'cream' : index === 3 ? 'warn' : 'default'}
+          />
+        ))}
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-12">
         <section className="surface-flat p-4 sm:p-5 lg:col-span-7">
-          <div className="flex items-center justify-between gap-2">
+          <div className="card-rule" aria-hidden="true" />
+          <div className="mt-2 flex items-center justify-between gap-2">
             <h2 className="text-[13.5px] font-medium text-ink">Schedule</h2>
             <Link to="/faculty/classes" className="text-[11px] font-medium text-link hover:underline">
               All classes
@@ -149,21 +154,23 @@ export default function FacultyDashboardPage() {
             </ul>
           )}
           {nextClass ? (
-            <div className="mt-3 rounded-[10px] bg-[var(--surface-sunken)] px-3 py-2">
-              <p className="text-[11px] text-muted">
-                Next session in {relativeTime(nextClass.scheduledStartAt)} · {nextClass.batch?.name}
+            <div className="note-strip mt-3">
+              <CalendarClock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <p className="leading-snug">
+                Next session {relativeTime(nextClass.scheduledStartAt)} · {nextClass.batch?.name}
               </p>
             </div>
           ) : null}
         </section>
 
-        <section className="surface-flat p-4 sm:p-5 lg:col-span-5">
-          <h2 className="text-[13.5px] font-medium text-ink">Attendance across your classes</h2>
+        <section className="surface-sky p-4 sm:p-5 lg:col-span-5">
+          <div className="card-rule" aria-hidden="true" />
+          <h2 className="mt-2 text-[13.5px] font-medium text-[var(--sky-900)]">Attendance across your classes</h2>
           <div className="mt-1">
             <DonutChart
               data={[
-                { name: 'Present', value: Math.max(teaching.attendance.averagePercentage, 0.5), color: '#242729' },
-                { name: 'Missed', value: Math.max(100 - teaching.attendance.averagePercentage, 0.5), color: '#eef0f1' },
+                { name: 'Present', value: Math.max(teaching.attendance.averagePercentage, 0.5), color: CHART_TONE.primary },
+                { name: 'Missed', value: Math.max(100 - teaching.attendance.averagePercentage, 0.5), color: CHART_TONE.track },
               ]}
               height={150}
               innerRadius={44}
@@ -172,7 +179,15 @@ export default function FacultyDashboardPage() {
               centerLabel="average"
             />
           </div>
-          <p className="mt-1 text-[10.5px] leading-relaxed text-soft">
+          <div className="mt-1 flex items-center justify-center gap-3">
+            <span className="legend-key" style={{ '--key': CHART_TONE.primary }}>
+              Present
+            </span>
+            <span className="legend-key" style={{ '--key': CHART_TONE.track }}>
+              Missed
+            </span>
+          </div>
+          <p className="mt-2 text-[10.5px] leading-relaxed text-[var(--sky-800)]">
             Averaged across {teaching.attendance.sessions} session{teaching.attendance.sessions === 1 ? '' : 's'} you have
             taught, computed from join/leave events.
           </p>
@@ -183,9 +198,10 @@ export default function FacultyDashboardPage() {
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-12">
-        <section className="surface-flat p-4 sm:p-5 lg:col-span-6">
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="text-[13.5px] font-medium text-ink">Doubts awaiting reply</h2>
+        <section className="surface-cream p-4 sm:p-5 lg:col-span-6">
+          <div className="card-rule" data-tone="cream" aria-hidden="true" />
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <h2 className="text-[13.5px] font-medium text-[var(--cream-900)]">Doubts awaiting reply</h2>
             <Link to="/faculty/doubts" className="text-[11px] font-medium text-link hover:underline">
               Inbox
             </Link>
@@ -198,7 +214,7 @@ export default function FacultyDashboardPage() {
                 <li key={doubt.id}>
                   <Link
                     to={`/faculty/doubts/${doubt.id}`}
-                    className="block rounded-[10px] border border-[var(--line)] p-2.5 transition hover:border-[var(--line-strong)]"
+                    className="block rounded-[10px] border border-[var(--cream-300)] bg-white/75 p-2.5 transition hover:border-[var(--cream-500)]"
                   >
                     <div className="flex items-center gap-2">
                       {doubt.priority === 'high' ? <StatusBadge tone="danger">High</StatusBadge> : null}
@@ -216,7 +232,8 @@ export default function FacultyDashboardPage() {
         </section>
 
         <section className="surface-flat p-4 sm:p-5 lg:col-span-6">
-          <h2 className="text-[13.5px] font-medium text-ink">Examination pipeline</h2>
+          <div className="card-rule" aria-hidden="true" />
+          <h2 className="mt-2 text-[13.5px] font-medium text-ink">Examination pipeline</h2>
           {exams.length === 0 ? (
             <EmptyState
               compact
@@ -254,14 +271,17 @@ export default function FacultyDashboardPage() {
         </section>
       </div>
 
-      <div className="mt-4 surface-flat flex flex-wrap items-center justify-between gap-3 p-4">
-        <div className="min-w-0">
-          <p className="flex items-center gap-1.5 text-[12.5px] font-medium text-ink">
-            <Radio className="h-3.5 w-3.5" aria-hidden="true" /> Start a live session
-          </p>
-          <p className="mt-0.5 text-[11px] text-muted">
-            Launching a studio opens the shared class session that students join, with attendance and recording hooks.
-          </p>
+      <div className="surface-sky mt-4 flex flex-wrap items-center justify-between gap-3 p-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="stat-icon" aria-hidden="true">
+            <Radio className="h-3.5 w-3.5" />
+          </span>
+          <div className="min-w-0">
+            <p className="flex items-center gap-1.5 text-[12.5px] font-medium text-[var(--sky-900)]">Start a live session</p>
+            <p className="mt-0.5 text-[11px] text-[var(--sky-800)]">
+              Launching a studio opens the shared class session that students join, with attendance and recording hooks.
+            </p>
+          </div>
         </div>
         <Link to="/faculty/classes" className="btn btn-primary btn-sm">
           Go to classes <ArrowRight className="h-3.5 w-3.5" />

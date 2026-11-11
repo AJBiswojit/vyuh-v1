@@ -123,7 +123,7 @@ export default function RecordingDetailPage() {
                     type="button"
                     onClick={() => setSpeed(value)}
                     className={`rounded-full px-2 py-0.5 text-[10.5px] transition ${
-                      speed === value ? 'bg-[var(--ink)] text-white' : 'text-ink-70 hover:bg-[var(--surface-sunken)]'
+                      speed === value ? 'bg-[var(--sky-800)] text-white' : 'text-ink-70 hover:bg-[var(--sky-50)] hover:text-[var(--sky-900)]'
                     }`}
                     aria-pressed={speed === value}
                   >

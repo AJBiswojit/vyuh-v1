@@ -7,6 +7,7 @@ import { userService } from '../../services/user.service.js'
 import { performanceService } from '../../services/performance.service.js'
 import { formatDate, relativeTime } from '../../lib/time.js'
 import { ErrorState, LoadingBlock } from '../../ui/states.jsx'
+import { AccountAvatar, RoleTag } from '../../ui/account-identity.jsx'
 import { PageHeader, StatusBadge } from '../../ui/workspace-kit.jsx'
 import { TextInput, TextArea, FormError } from '../../ui/fields.jsx'
 import Button from '../../ui/Button.jsx'
@@ -59,7 +60,7 @@ export default function FacultyAccountPage() {
   if (loading && !data) {
     return (
       <div>
-        <PageHeader eyebrow="Faculty workspace" title="Account" />
+        <PageHeader eyebrow="Faculty workspace" eyebrowTone="cream" title="Account" />
         <LoadingBlock rows={5} />
       </div>
     )
@@ -68,7 +69,7 @@ export default function FacultyAccountPage() {
   if (error) {
     return (
       <div>
-        <PageHeader eyebrow="Faculty workspace" title="Account" />
+        <PageHeader eyebrow="Faculty workspace" eyebrowTone="cream" title="Account" />
         <ErrorState error={error} onRetry={refresh} title="Your account could not be loaded" />
       </div>
     )
@@ -76,21 +77,18 @@ export default function FacultyAccountPage() {
 
   const profile = data.profile
   const teaching = data.teaching
-  const initials = (profile.name || 'V').split(' ').map((part) => part[0]).slice(0, 2).join('')
-
   return (
     <div>
-      <PageHeader eyebrow="Faculty workspace" title="Account" description="Your profile, teaching load and security settings." />
+      <PageHeader eyebrow="Faculty workspace" eyebrowTone="cream" title="Account" description="Your profile, teaching load and security settings." />
 
       <div className="grid gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
         <div className="space-y-4">
-          <section className="surface-flat p-4 text-center">
-            <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--ink)] text-[20px] font-semibold text-white">
-              {initials}
-            </span>
+          <section className="surface-cream p-4 text-center">
+            <AccountAvatar name={profile.name} role="faculty" size="xl" className="mx-auto font-semibold" />
             <h2 className="mt-2.5 text-[15px] font-medium text-ink">{profile.name}</h2>
             <p className="text-[11.5px] text-muted">{profile.email}</p>
             <div className="mt-2 flex flex-wrap justify-center gap-1.5">
+              <RoleTag role="faculty" />
               <StatusBadge tone="sky">{profile.employeeId}</StatusBadge>
               <StatusBadge tone={profile.status === 'active' ? 'good' : 'warn'} dot>
                 {profile.status === 'active' ? 'Active' : String(profile.status || '').toUpperCase()}
@@ -184,11 +182,11 @@ export default function FacultyAccountPage() {
               { label: 'Classes taken', value: teaching.classes.completed, hint: `${teaching.classes.upcoming} upcoming` },
               { label: 'Examinations', value: teaching.exams.total, hint: `${teaching.exams.published} published` },
               { label: 'Doubts answered', value: teaching.doubts.resolved, hint: `${teaching.doubts.pending} pending` },
-            ].map((stat) => (
-              <div key={stat.label} className="surface-flat p-4">
+            ].map((stat, index) => (
+              <div key={stat.label} className="stat-tile" data-tone={index === 0 ? 'sky' : index === 2 ? 'cream' : undefined}>
                 <p className="label-xs">{stat.label}</p>
                 <p className="stat-figure mt-1.5 text-ink">{stat.value}</p>
-                <p className="mt-1 text-[10.5px] text-soft">{stat.hint}</p>
+                <p className="stat-tile-hint">{stat.hint}</p>
               </div>
             ))}
           </div>

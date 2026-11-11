@@ -122,7 +122,7 @@ export default function AdminModerationPage() {
                           </>
                         )}
                       </span>
-                      <span className="badge">{subjectName(item.subject)}</span>
+                      <span className="badge badge-sky">{subjectName(item.subject)}</span>
                       <span className="text-[10px] text-soft">{relativeTime(item.at)}</span>
                     </div>
                     <h3 className="mt-1.5 text-[13px] font-medium text-ink">{item.title}</h3>

@@ -18,6 +18,7 @@ import { SUBJECTS } from '../../data/mock/subjects.mock.js'
 import { relativeTime } from '../../lib/time.js'
 import { ErrorState, LoadingBlock, EmptyState, Modal } from '../../ui/states.jsx'
 import { PageHeader, StatusBadge, statusLabel, statusTone } from '../../ui/workspace-kit.jsx'
+import { AccountAvatar, RoleBadge } from '../../ui/account-identity.jsx'
 import { TextInput, Select, CheckboxGroup, FormError, FormSuccess } from '../../ui/fields.jsx'
 import Button from '../../ui/Button.jsx'
 import { useConfirm, useToast } from '../../ui/feedback.jsx'
@@ -176,6 +177,7 @@ export default function AdminUsersPage() {
     <div>
       <PageHeader
         eyebrow="Institute admin"
+        eyebrowTone="cream"
         title="Users"
         description="Provision students and faculty, manage access and issue temporary credentials. Passwords are never displayed in this table."
         actions={
@@ -200,7 +202,17 @@ export default function AdminUsersPage() {
         </div>
       ) : null}
 
-      <div className="surface-flat mb-4 flex flex-wrap items-center gap-2 p-3">
+      <div className="surface-sky mb-3 flex flex-wrap items-center justify-between gap-2 px-3 py-2.5">
+        <p className="text-[11.5px] font-medium text-[var(--sky-900)]">
+          {meta.total} account{meta.total === 1 ? '' : 's'} in this institute
+        </p>
+        <p className="text-[10.5px] text-[var(--sky-800)]">
+          {roleFilter === 'all' ? 'All roles' : `Filtered to ${roleFilter}`} ·{' '}
+          {statusFilter === 'all' ? 'any status' : statusFilter} · new accounts get a temporary password
+        </p>
+      </div>
+
+      <div className="surface-flat mb-4 flex flex-wrap items-center gap-2 border-[var(--sky-200)] bg-[var(--sky-50)] p-3">
         <div className="relative min-w-[200px] flex-1">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-soft" aria-hidden="true" />
           <input
@@ -214,7 +226,7 @@ export default function AdminUsersPage() {
             aria-label="Search users"
           />
         </div>
-        <div className="tab-row border-0">
+        <div className="segmented" role="tablist" aria-label="Filter by role">
           {[
             { id: 'all', label: 'Everyone' },
             { id: 'student', label: 'Students' },
@@ -226,7 +238,7 @@ export default function AdminUsersPage() {
               type="button"
               role="tab"
               aria-selected={roleFilter === item.id}
-              className="tab"
+              className="segmented-item"
               onClick={() => changeRole(item.id)}
             >
               {item.label}
@@ -285,11 +297,18 @@ export default function AdminUsersPage() {
                   {rows.map((row) => (
                     <tr key={row.id}>
                       <td>
-                        <p className="font-medium text-ink">{row.name}</p>
-                        <p className="text-[10.5px] text-soft">{row.email}</p>
+                        <span className="flex items-center gap-2.5">
+                          <AccountAvatar name={row.name} role={row.role} size="sm" />
+                          <span className="min-w-0">
+                            <span className="block truncate font-medium text-ink" data-identity-name>
+                              {row.name}
+                            </span>
+                            <span className="block truncate text-[10.5px] text-soft">{row.email}</span>
+                          </span>
+                        </span>
                       </td>
                       <td>
-                        <StatusBadge tone={row.role === 'admin' ? 'sky' : row.role === 'faculty' ? 'neutral' : 'outline'}>{roleLabel(row.role)}</StatusBadge>
+                        <RoleBadge role={row.role} label={roleLabel(row.role)} />
                       </td>
                       <td className="font-mono text-[10.5px] text-muted">{row.employeeId || row.enrollmentId || row.id}</td>
                       <td className="text-[10.5px] text-muted">
@@ -304,7 +323,7 @@ export default function AdminUsersPage() {
                           {statusLabel(row.status)}
                         </StatusBadge>
                         {row.mustChangePassword ? (
-                          <span className="mt-0.5 block text-[9.5px] text-[#8a6d1f]">Must change password</span>
+                          <span className="mt-0.5 block text-[9.5px] text-[var(--warn-700)]">Must change password</span>
                         ) : null}
                       </td>
                       <td className="text-[10.5px] text-muted">{row.lastLoginAt ? relativeTime(row.lastLoginAt) : 'Never'}</td>
@@ -346,9 +365,10 @@ export default function AdminUsersPage() {
             </div>
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[11px] text-soft">
-              {meta.total} account{meta.total === 1 ? '' : 's'} · page {meta.page} of {meta.totalPages}
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-[10px] border border-[var(--cream-300)] bg-[var(--cream-100)] px-3 py-2">
+            <p className="text-[11px] text-[var(--cream-900)]">
+              <span className="font-medium">{meta.total} account{meta.total === 1 ? '' : 's'}</span> · page {meta.page} of{' '}
+              {meta.totalPages}
             </p>
             <div className="flex gap-1.5">
               <Button size="xs" variant="secondary" disabled={page <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>
@@ -447,7 +467,7 @@ export default function AdminUsersPage() {
             </div>
           ) : null}
 
-          <div className="rounded-[10px] bg-[var(--surface-sunken)] p-3">
+          <div className="rounded-[10px] border border-[var(--sky-200)] bg-[var(--sky-50)] p-3">
             <p className="text-[10.5px] leading-relaxed text-muted">
               The temporary password follows the institute policy and is shown exactly once after creation. Nothing here
               claims production-grade credential handling.

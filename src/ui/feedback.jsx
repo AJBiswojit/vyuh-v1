@@ -28,8 +28,8 @@ export function useConfirm() {
 }
 
 const TONES = {
-  success: { icon: Check, className: 'border-[#cfe0c9] bg-[#eef5ec] text-[#2f532c]' },
-  error: { icon: AlertTriangle, className: 'border-[#e8c9c9] bg-[#fbeeee] text-[#7d2b2b]' },
+  success: { icon: Check, className: 'border-[var(--good-300)] bg-[var(--good-50)] text-[var(--good-800)]' },
+  error: { icon: AlertTriangle, className: 'border-[var(--bad-300)] bg-[var(--bad-100)] text-[var(--bad-700)]' },
   info: { icon: Info, className: 'border-[var(--line-strong)] bg-white text-ink' },
   loading: { icon: Loader2, className: 'border-[var(--line-strong)] bg-white text-ink' },
 }
@@ -107,7 +107,7 @@ export function ConfirmDialog({ request, onResolve }) {
         <div className="flex items-start gap-3">
           <span
             className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-              tone === 'danger' ? 'bg-[#fbeeee] text-[#7d2b2b]' : 'bg-[var(--sky-100)] text-[var(--sky-700)]'
+              tone === 'danger' ? 'bg-[var(--bad-100)] text-[var(--bad-700)]' : 'bg-[var(--sky-100)] text-[var(--sky-800)]'
             }`}
           >
             <AlertTriangle className="h-4 w-4" aria-hidden="true" />

@@ -1,8 +1,12 @@
 import { Loader2 } from 'lucide-react'
 
+/* Hierarchy: primary (deep blue) for the one main action on a screen,
+   secondary (white outline) for supporting actions, tertiary (warm cream) for
+   a second emphasis next to a primary, ghost for inline/low-weight actions. */
 const VARIANTS = {
   primary: 'btn-primary',
   secondary: 'btn-secondary',
+  tertiary: 'btn-tertiary',
   sky: 'btn-sky',
   ghost: 'btn-ghost',
   danger: 'btn-danger',

@@ -186,7 +186,7 @@ function AIAssistant({ conversations, onConversationsChange }) {
                 <div className={`max-w-[92%] ${message.role === 'student' ? 'text-right' : ''}`}>
                   <div
                     className={`inline-block whitespace-pre-line rounded-[12px] px-3 py-2 text-left text-[12px] leading-relaxed ${
-                      message.role === 'student' ? 'bg-[var(--ink)] text-white' : 'border border-[var(--line)] bg-white text-ink'
+                      message.role === 'student' ? 'bg-[var(--sky-800)] text-white' : 'border border-[var(--sky-200)] bg-[var(--sky-50)] text-ink'
                     }`}
                   >
                     {message.text}
@@ -396,7 +396,7 @@ export default function DoubtsPage() {
                     <StatusBadge tone={statusTone(doubt.status)} dot>
                       {statusLabel(doubt.status)}
                     </StatusBadge>
-                    <span className="badge">{subjectName(doubt.subjectId)}</span>
+                    <span className="badge badge-sky">{subjectName(doubt.subjectId)}</span>
                     <span className="badge badge-outline">{doubt.topicName}</span>
                     {doubt.priority === 'high' ? <StatusBadge tone="danger">High priority</StatusBadge> : null}
                     <span className="ml-auto text-[10px] text-soft">{relativeTime(doubt.updatedAt)}</span>

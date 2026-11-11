@@ -10,20 +10,55 @@
   --charcoal: #242729;
   --white: #ffffff;
 
-  --sky-50: #f2f9fd;
+  /* Sky family — built out from the locked brand blue #aed9f0 (--sky-300).
+     50/100 are reading surfaces, 300 is the brand fill, 500/700 are accents and
+     800/900 are the deep interactive blue used for primary actions. */
+  --sky-50: #f4fafd;
   --sky-100: #e3f2fb;
   --sky-200: #cbe7f6;
   --sky-300: #aed9f0;
   --sky-400: #8ec6e4;
   --sky-500: #6aaed2;
+  --sky-600: #4a8fb5;
   --sky-700: #2f6b8c;
+  --sky-800: #23536e;
+  --sky-900: #1b4057;
 
-  --cream-50: #fbf9f1;
-  --cream-100: #f7f3e4;
+  /* Warm cream family — built out from the locked brand cream #f5f0df
+     (--cream-200), with a deeper gold-brown for text on cream. */
+  --cream-50: #fdfbf5;
+  --cream-100: #f9f5e9;
   --cream-200: #f5f0df;
   --cream-300: #e9e1c8;
+  --cream-400: #d9cda6;
   --cream-500: #b9a97a;
   --cream-700: #8a7a4e;
+  --cream-800: #6b5c33;
+  --cream-900: #564a26;
+
+  /* Semantic families. Deliberately muted so a page can carry green, amber
+     and red states without turning into a traffic light: fills stay under a
+     10% chroma step, text variants clear 5:1 on their own fill. */
+  --good-50: #f2f8f0;
+  --good-100: #eaf3e7;
+  --good-300: #bcd6b4;
+  --good-500: #5d9153;
+  --good-700: #3c6a35;
+  --good-800: #2f532c;
+
+  --warn-50: #fdf7e8;
+  --warn-100: #faf1da;
+  --warn-300: #e7d3a2;
+  --warn-500: #c0a047;
+  --warn-700: #856618;
+  --warn-800: #6d5312;
+
+  --bad-50: #fdf5f5;
+  --bad-100: #fbeeee;
+  --bad-300: #e8c9c9;
+  --bad-500: #bd6a6a;
+  --bad-700: #8c2f2f;
+  --bad-800: #732424;
 
   --ink: #242729;
   --ink-80: rgba(36, 39, 41, 0.8);
@@ -31,11 +66,18 @@
   --ink-60: rgba(36, 39, 41, 0.6);
   --ink-45: rgba(36, 39, 41, 0.45);
   --ink-30: rgba(36, 39, 41, 0.3);
-  --line: rgba(36, 39, 41, 0.1);
-  --line-strong: rgba(36, 39, 41, 0.18);
+  /* Borders carry a trace of warm blue-grey so cards do not read as pencil
+     outlines on a monochrome page. */
+  --line: rgba(36, 53, 64, 0.1);
+  --line-soft: rgba(36, 53, 64, 0.07);
+  --line-strong: rgba(36, 53, 64, 0.2);
+  /* The page ground is a cool warm-white; cards are true white on top of it, so
+     white reads as "raised" instead of "empty". */
   --surface: #ffffff;
-  --surface-muted: #fafaf8;
-  --surface-sunken: #f4f4f0;
+  --surface-muted: #fbfcfa;
+  --surface-sunken: #f2f4f3;
+  --canvas: #f7fafc;
+  --canvas-tint: #f4f9fc;
 
   --radius-xs: 8px;
   --radius-sm: 12px;
@@ -43,10 +85,13 @@
   --radius-lg: 22px;
   --radius-xl: 28px;
 
-  --shadow-xs: 0 1px 2px rgba(36, 39, 41, 0.05);
-  --shadow-sm: 0 4px 14px -10px rgba(36, 39, 41, 0.28);
-  --shadow-md: 0 12px 32px -20px rgba(36, 39, 41, 0.3);
-  --shadow-lg: 0 28px 60px -32px rgba(36, 39, 41, 0.34);
+  /* Shadows are tinted with the deep blue rather than neutral grey, which is
+     what keeps white cards from looking dusty on a pale ground. */
+  --shadow-xs: 0 1px 2px rgba(27, 64, 87, 0.05);
+  --shadow-sm: 0 4px 14px -10px rgba(27, 64, 87, 0.3);
+  --shadow-md: 0 12px 32px -20px rgba(27, 64, 87, 0.32);
+  --shadow-lg: 0 28px 60px -32px rgba(27, 64, 87, 0.34);
+  --shadow-raised: 0 1px 2px rgba(27, 64, 87, 0.04), 0 10px 24px -22px rgba(27, 64, 87, 0.35);
 
   --font-display: 'Zodiak', 'Instrument Serif', Georgia, serif;
   --font-ui: 'Switzer', 'Plus Jakarta Sans', 'Gilroy', system-ui, -apple-system, sans-serif;
@@ -61,7 +106,7 @@
 
 .ws-root {
   min-height: 100vh;
-  background: var(--surface-muted);
+  background: var(--canvas);
   color: var(--ink);
   font-family: var(--font-ui);
 }
@@ -90,10 +135,18 @@
   flex-direction: column;
 }
 
+/* The canvas carries a very low-opacity wash of the two brand colours so the
+   page ground is never flat grey. It is a single rasterised gradient, no
+   per-card decoration. */
 .ws-canvas {
+  position: relative;
   flex: 1;
   min-width: 0;
   padding: 24px clamp(16px, 2.2vw, 34px) 56px;
+  background:
+    radial-gradient(ellipse 70% 46% at 8% -6%, rgba(174, 217, 240, 0.24), transparent 68%),
+    radial-gradient(ellipse 54% 42% at 96% 2%, rgba(245, 240, 223, 0.55), transparent 66%);
+  background-repeat: no-repeat;
 }
 
 @media (max-width: 640px) {
@@ -108,12 +161,14 @@
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
 }
 
 .surface-flat {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
+  box-shadow: var(--shadow-raised);
 }
 
 .surface-sunken {
@@ -122,22 +177,70 @@
   border-radius: var(--radius-md);
 }
 
+/* Tinted reading surfaces. Each carries a 3px brand rail so the colour reads
+   as identity rather than as a flat wash. */
 .surface-cream {
-  background: var(--cream-100);
+  background: linear-gradient(180deg, var(--cream-100), var(--cream-50) 72%);
   border: 1px solid var(--cream-300);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
+}
+
+.surface-cream-rail {
+  background: linear-gradient(180deg, var(--cream-100), var(--cream-50) 82%);
+  border: 1px solid var(--cream-300);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
+  box-shadow:
+    inset 0 3px 0 var(--cream-500),
+    var(--shadow-raised);
 }
 
 .surface-sky {
-  background: var(--sky-100);
+  background: linear-gradient(180deg, var(--sky-100), var(--sky-50) 78%);
   border: 1px solid var(--sky-200);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
 }
 
-.surface-ink {
-  background: var(--ink);
-  color: var(--white);
+.surface-sky-rail {
+  background: linear-gradient(180deg, var(--sky-100), var(--sky-50) 82%);
+  border: 1px solid var(--sky-200);
   border-radius: var(--radius-lg);
+  box-shadow:
+    inset 0 3px 0 var(--sky-300),
+    var(--shadow-raised);
+}
+
+/* Deep blue is the "primary / active" surface. It is used for a handful of
+   focal panels, never as a page or card default. */
+.surface-deep {
+  background: linear-gradient(150deg, var(--sky-800), var(--sky-900));
+  color: var(--white);
+  border: 1px solid var(--sky-900);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 26px 50px -34px rgba(27, 64, 87, 0.75);
+}
+
+/* Legacy alias kept so existing tone="ink" call sites keep working; it now
+   resolves to the deep brand blue instead of flat charcoal. */
+.surface-ink {
+  background: linear-gradient(150deg, var(--sky-800), var(--sky-900));
+  color: var(--white);
+  border: 1px solid var(--sky-900);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 26px 50px -34px rgba(27, 64, 87, 0.75);
+}
+
+/* Focus panel: neutral white card with a coloured top edge, used where a full
+   tint would fight the content (charts, tables). */
+.surface-accent-top {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow:
+    inset 0 3px 0 var(--sky-300),
+    var(--shadow-raised);
 }
 
 .hairline {
@@ -234,13 +337,17 @@
   cursor: not-allowed;
 }
 
+/* Primary = the deep interactive blue. It is the one saturated element on a
+   page, which is what makes "the main action here" obvious at a glance. */
 .btn-primary {
-  background: var(--ink);
+  background: linear-gradient(180deg, var(--sky-700), var(--sky-800));
   color: var(--white);
+  border-color: var(--sky-800);
+  box-shadow: 0 1px 1px rgba(27, 64, 87, 0.18);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #14171a;
+  background: linear-gradient(180deg, var(--sky-800), var(--sky-900));
 }
 
 .btn-secondary {
@@ -250,17 +357,33 @@
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: var(--surface-sunken);
+  background: var(--sky-50);
+  border-color: var(--sky-300);
+  color: var(--sky-800);
+}
+
+/* Tertiary: warm cream, for the second-most-important action next to a deep
+   blue primary (e.g. "Add question" beside "Create examination"). */
+.btn-tertiary {
+  background: var(--cream-200);
+  color: var(--cream-900);
+  border-color: var(--cream-300);
+}
+
+.btn-tertiary:hover:not(:disabled) {
+  background: var(--cream-300);
+  border-color: var(--cream-500);
 }
 
 .btn-sky {
   background: var(--sky-300);
-  color: var(--ink);
+  color: var(--sky-900);
   border-color: var(--sky-400);
 }
 
 .btn-sky:hover:not(:disabled) {
   background: var(--sky-400);
+  border-color: var(--sky-500);
 }
 
 .btn-ghost {
@@ -269,8 +392,8 @@
 }
 
 .btn-ghost:hover:not(:disabled) {
-  background: rgba(36, 39, 41, 0.05);
-  color: var(--ink);
+  background: rgba(35, 83, 110, 0.07);
+  color: var(--sky-800);
 }
 
 .btn-danger {
@@ -312,8 +435,9 @@
 }
 
 .icon-btn:hover:not(:disabled) {
-  background: var(--surface-sunken);
-  color: var(--ink);
+  background: var(--sky-50);
+  border-color: var(--sky-300);
+  color: var(--sky-800);
 }
 
 .icon-btn:disabled {
@@ -354,7 +478,7 @@
 .field-textarea:focus {
   outline: none;
   border-color: var(--sky-500);
-  box-shadow: 0 0 0 3px rgba(174, 217, 240, 0.45);
+  box-shadow: 0 0 0 3px rgba(174, 217, 240, 0.5);
 }
 
 .field-input[aria-invalid='true'],
@@ -406,53 +530,63 @@
   align-items: center;
   gap: 5px;
   border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--white);
+  border: 1px solid var(--line-strong);
+  background: var(--surface-sunken);
   padding: 2px 9px;
   font-size: 11px;
   font-weight: 500;
-  color: var(--ink-70);
+  color: var(--ink-80);
   white-space: nowrap;
 }
 
 .badge-sky {
   background: var(--sky-100);
   border-color: var(--sky-200);
-  color: var(--sky-700);
+  color: var(--sky-800);
 }
 
 .badge-cream {
-  background: var(--cream-100);
+  background: var(--cream-200);
   border-color: var(--cream-300);
-  color: var(--cream-700);
+  color: var(--cream-800);
 }
 
 .badge-ink {
-  background: var(--ink);
-  border-color: var(--ink);
+  background: var(--sky-900);
+  border-color: var(--sky-900);
   color: var(--white);
 }
 
 .badge-outline {
-  background: transparent;
+  background: var(--white);
+  border-color: var(--sky-300);
+  color: var(--sky-800);
+}
+
+/* Neutral badge: a visible stone tint rather than a white pill, so a status or
+   difficulty chip never disappears into the card behind it. */
+.badge-neutral {
+  background: var(--surface-sunken);
+  border-color: var(--line-strong);
+  color: var(--ink-80);
 }
 
 .badge-good {
-  background: #eef5ec;
-  border-color: #cfe0c9;
-  color: #375f34;
+  background: var(--good-100);
+  border-color: var(--good-300);
+  color: var(--good-800);
 }
 
 .badge-warn {
-  background: var(--cream-100);
-  border-color: #e3d5a8;
-  color: #7a6220;
+  background: var(--warn-100);
+  border-color: var(--warn-300);
+  color: var(--warn-800);
 }
 
 .badge-danger {
-  background: #fbeeee;
-  border-color: #e8c9c9;
-  color: #8c2f2f;
+  background: var(--bad-100);
+  border-color: var(--bad-300);
+  color: var(--bad-700);
 }
 
 .dot {
@@ -481,7 +615,8 @@
   font-weight: 500;
   padding: 10px 12px;
   border-bottom: 1px solid var(--line);
-  background: var(--surface-muted);
+  background: var(--sky-50);
+  color: var(--sky-800);
   white-space: nowrap;
 }
 
@@ -497,7 +632,7 @@
 }
 
 .data-table tbody tr:hover td {
-  background: rgba(174, 217, 240, 0.12);
+  background: var(--sky-50);
 }
 
 .data-table .align-right {
@@ -529,19 +664,54 @@
   color: var(--ink-60);
   white-space: nowrap;
   border-bottom: 1.5px solid transparent;
-  transition: color 140ms ease, border-color 140ms ease;
+  transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
   cursor: pointer;
   background: transparent;
+  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
 }
 
 .tab[aria-selected='true'] {
-  color: var(--ink);
-  border-bottom-color: var(--ink);
+  color: var(--sky-800);
+  border-bottom-color: var(--sky-700);
   font-weight: 500;
+  background: linear-gradient(180deg, transparent, var(--sky-50));
 }
 
 .tab:hover {
-  color: var(--ink);
+  color: var(--sky-800);
+  background: var(--sky-50);
+}
+
+/* Pill-shaped filter groups ("segmented" controls) used above tables. */
+.segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-sunken);
+}
+
+.segmented-item {
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-size: 11.5px;
+  color: var(--ink-70);
+  transition: background 140ms ease, color 140ms ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.segmented-item:hover {
+  color: var(--sky-800);
+}
+
+.segmented-item[aria-selected='true'],
+.segmented-item[data-active='true'] {
+  background: var(--surface);
+  color: var(--sky-800);
+  font-weight: 500;
+  box-shadow: var(--shadow-xs);
 }
 
 /* ------------------------------ skeleton ----------------------------- */
@@ -590,35 +760,35 @@
 }
 
 .palette-not-visited {
-  background: #eef0f1;
+  background: var(--surface-sunken);
   color: var(--ink-80);
-  border-color: #dcdfe1;
+  border-color: var(--line-strong);
 }
 
 .palette-not-answered {
-  background: #ffffff;
-  color: #8c2f2f;
-  border-color: #c99b9b;
+  background: var(--bad-50);
+  color: var(--bad-700);
+  border-color: var(--bad-300);
   border-width: 1.5px;
 }
 
 .palette-answered {
-  background: #dfeeda;
-  color: #2f5c2b;
-  border-color: #b9d5b1;
+  background: var(--good-100);
+  color: var(--good-800);
+  border-color: var(--good-300);
 }
 
 .palette-marked {
-  background: var(--cream-100);
-  color: #7a6220;
-  border-color: #d9c78d;
+  background: var(--warn-100);
+  color: var(--warn-800);
+  border-color: var(--warn-300);
   border-width: 1.5px;
 }
 
 .palette-answered-marked {
-  background: #dfeeda;
-  color: #2f5c2b;
-  border-color: #b9d5b1;
+  background: var(--good-100);
+  color: var(--good-800);
+  border-color: var(--good-300);
   position: relative;
 }
 
@@ -630,11 +800,11 @@
   height: 5px;
   width: 5px;
   border-radius: 999px;
-  background: #8a6d1f;
+  background: var(--warn-700);
 }
 
 .palette-current {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--sky-800);
   outline-offset: 1px;
 }
 
@@ -700,8 +870,12 @@
 /* ---------------------------- misc helpers --------------------------- */
 
 .focus-ring:focus-visible {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--sky-700);
   outline-offset: 2px;
+}
+
+:where(a, button, [role='tab'], input, select, textarea):focus-visible {
+  outline-color: var(--sky-700);
 }
 
 .clamp-1 {
@@ -734,4 +908,242 @@
   background-image:
     radial-gradient(ellipse 60% 50% at 20% 0%, rgba(174, 217, 240, 0.5), transparent 70%),
     radial-gradient(ellipse 50% 60% at 90% 10%, rgba(245, 240, 223, 0.7), transparent 70%);
+}
+
+/* --------------------------- brand identity kit ---------------------------
+   Taxonomy used across all three workspaces so colour carries meaning:
+
+     white card      = neutral content, lists, tables     (most surfaces)
+     cream card      = "about you" / reflective panels    (profile, insights)
+     sky card        = information, quick action, selected state
+     deep blue card  = one focal panel per screen at most (live session, hero)
+     coloured rail   = same as the card tone, for dense pages where a full
+                       tint would fight the content
+
+   Tones are exposed as data attributes on .stat-tile so pages pick a tone
+   without inventing classes.
+-------------------------------------------------------------------------- */
+
+/* Page eyebrow: pale sky pill instead of grey letterspaced text. */
+.page-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid var(--sky-200);
+  background: var(--sky-100);
+  padding: 2px 9px 2px 7px;
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sky-800);
+}
+
+.page-eyebrow[data-tone='cream'] {
+  border-color: var(--cream-300);
+  background: var(--cream-200);
+  color: var(--cream-900);
+}
+
+.page-eyebrow[data-tone='cream']::before {
+  background: var(--cream-500);
+}
+
+.page-eyebrow[data-tone='sky'] {
+  border-color: var(--sky-200);
+  background: var(--sky-100);
+  color: var(--sky-800);
+}
+
+.page-eyebrow::before {
+  content: '';
+  height: 4px;
+  width: 4px;
+  border-radius: 999px;
+  background: var(--sky-500);
+}
+
+/* Stat tile — the workhorse number card. */
+.stat-tile {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-raised);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+a.stat-tile:hover,
+.stat-tile.is-interactive:hover {
+  border-color: var(--sky-300);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.stat-tile[data-tone='cream'] {
+  background: linear-gradient(160deg, var(--cream-100), var(--cream-50) 74%);
+  border-color: var(--cream-300);
+}
+
+.stat-tile[data-tone='sky'] {
+  background: linear-gradient(160deg, var(--sky-100), var(--sky-50) 74%);
+  border-color: var(--sky-200);
+}
+
+.stat-tile[data-tone='deep'] {
+  background: linear-gradient(150deg, var(--sky-800), var(--sky-900));
+  border-color: var(--sky-900);
+  color: var(--white);
+  box-shadow: 0 22px 40px -32px rgba(27, 64, 87, 0.8);
+}
+
+.stat-tile[data-tone='deep'] .label-xs,
+.stat-tile[data-tone='deep'] .stat-tile-hint {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.stat-tile[data-tone='good'] {
+  background: linear-gradient(160deg, var(--good-50), var(--good-100));
+  border-color: var(--good-300);
+}
+
+.stat-tile[data-tone='warn'] {
+  background: linear-gradient(160deg, var(--warn-50), var(--warn-100));
+  border-color: var(--warn-300);
+}
+
+.stat-tile-hint {
+  margin-top: 6px;
+  font-size: 10.5px;
+  line-height: 1.45;
+  color: var(--ink-45);
+}
+
+/* Small tonal icon chip used in stat tiles, list rows and panel headers. */
+.stat-icon {
+  display: inline-flex;
+  height: 26px;
+  width: 26px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--sky-200);
+  background: var(--sky-100);
+  color: var(--sky-800);
+}
+
+.stat-icon[data-tone='cream'] {
+  border-color: var(--cream-300);
+  background: var(--cream-200);
+  color: var(--cream-800);
+}
+
+.stat-icon[data-tone='deep'] {
+  border-color: var(--sky-900);
+  background: var(--sky-800);
+  color: var(--white);
+}
+
+.stat-icon[data-tone='good'] {
+  border-color: var(--good-300);
+  background: var(--good-100);
+  color: var(--good-700);
+}
+
+.stat-icon[data-tone='warn'] {
+  border-color: var(--warn-300);
+  background: var(--warn-100);
+  color: var(--warn-700);
+}
+
+.stat-icon[data-tone='bad'] {
+  border-color: var(--bad-300);
+  background: var(--bad-100);
+  color: var(--bad-700);
+}
+
+/* Section heading inside a card: a short tone-coloured rule above the title. */
+.card-rule {
+  display: block;
+  height: 3px;
+  width: 22px;
+  border-radius: 999px;
+  background: var(--sky-300);
+}
+
+.card-rule[data-tone='cream'] {
+  background: var(--cream-500);
+}
+
+.card-rule[data-tone='deep'] {
+  background: var(--sky-900);
+}
+
+.card-rule[data-tone='good'] {
+  background: var(--good-500);
+}
+
+.card-rule[data-tone='warn'] {
+  background: var(--warn-500);
+}
+
+.card-rule[data-tone='bad'] {
+  background: var(--bad-500);
+}
+
+/* Chart legend key. */
+.legend-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  color: var(--ink-70);
+}
+
+.legend-key::before {
+  content: '';
+  height: 7px;
+  width: 7px;
+  border-radius: 2px;
+  background: var(--key, var(--sky-500));
+}
+
+/* Selected list row (questions, doubts, reports). */
+.row-selected {
+  background: var(--sky-50);
+  box-shadow: inset 3px 0 0 var(--sky-500);
+}
+
+/* Tinted "note" strip inside cards. */
+.note-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--sky-200);
+  background: var(--sky-50);
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--sky-900);
+}
+
+.note-strip[data-tone='cream'] {
+  border-color: var(--cream-300);
+  background: var(--cream-50);
+  color: var(--cream-900);
+}
+
+/* ------------------------------ sidebar ------------------------------ */
+
+/* Warm paper ground with a faint vertical sky wash at the top, so the nav
+   reads as part of the brand rather than as a grey panel. */
+.ws-sidebar {
+  background:
+    linear-gradient(180deg, rgba(174, 217, 240, 0.2), transparent 220px),
+    var(--surface-muted);
 }

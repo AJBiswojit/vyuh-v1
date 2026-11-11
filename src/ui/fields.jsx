@@ -9,7 +9,7 @@ export function Field({ label, hint, error, required, htmlFor, children, classNa
       {label ? (
         <label className="field-label" htmlFor={htmlFor}>
           {label}
-          {required ? <span className="ml-1 text-[#8c2f2f]">*</span> : null}
+          {required ? <span className="ml-1 text-[var(--bad-700)]">*</span> : null}
         </label>
       ) : null}
       {children}
@@ -138,7 +138,7 @@ export function Toggle({ label, description, checked, onChange, disabled, id }) 
         disabled={disabled}
         onClick={() => onChange?.(!checked)}
         className={`relative h-[22px] w-[38px] shrink-0 rounded-full border transition ${
-          checked ? 'border-[var(--ink)] bg-[var(--ink)]' : 'border-[var(--line-strong)] bg-[var(--surface-sunken)]'
+          checked ? 'border-[var(--sky-700)] bg-[var(--sky-700)]' : 'border-[var(--line-strong)] bg-[var(--surface-sunken)]'
         } ${disabled ? 'opacity-50' : ''}`}
       >
         <span
@@ -183,7 +183,7 @@ export function SearchInput({ value, onChange, placeholder = 'Search…', classN
 export function FormError({ children }) {
   if (!children) return null
   return (
-    <div className="flex items-start gap-2 rounded-[10px] border border-[#e8c9c9] bg-[#fdf6f6] px-3 py-2.5 text-[12px] text-[#7d2b2b]">
+    <div className="flex items-start gap-2 rounded-[10px] border border-[var(--bad-300)] bg-[var(--bad-50)] px-3 py-2.5 text-[12px] text-[var(--bad-700)]">
       <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
       <span>{children}</span>
     </div>
@@ -193,7 +193,7 @@ export function FormError({ children }) {
 export function FormSuccess({ children }) {
   if (!children) return null
   return (
-    <div className="flex items-start gap-2 rounded-[10px] border border-[#cfe0c9] bg-[#eef5ec] px-3 py-2.5 text-[12px] text-[#2f532c]">
+    <div className="flex items-start gap-2 rounded-[10px] border border-[var(--good-300)] bg-[var(--good-50)] px-3 py-2.5 text-[12px] text-[var(--good-800)]">
       <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
       <span>{children}</span>
     </div>

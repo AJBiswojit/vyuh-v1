@@ -271,7 +271,7 @@ export default function FacultyRecordingsPage() {
                     <StatusBadge tone={statusTone(recording.status)} dot>
                       {statusLabel(recording.status)}
                     </StatusBadge>
-                    <span className="badge">{subjectName(recording.subjectId)}</span>
+                    <span className="badge badge-sky">{subjectName(recording.subjectId)}</span>
                     <span className="badge badge-outline">{recording.batch?.name}</span>
                     {recording.moderationState === 'flagged' ? (
                       <StatusBadge tone="warn">

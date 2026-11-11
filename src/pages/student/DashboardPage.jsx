@@ -1,6 +1,18 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowUpRight, Video, FileText, MessageSquare, PlayCircle, Clock, TrendingUp, Sparkles } from 'lucide-react'
+import {
+  ArrowUpRight,
+  Video,
+  FileText,
+  MessageSquare,
+  PlayCircle,
+  Clock,
+  TrendingUp,
+  Sparkles,
+  CalendarDays,
+  Timer,
+  Target,
+} from 'lucide-react'
 import { useAuth } from '../../context/AuthContext.jsx'
 import useAsync from '../../lib/useAsync.js'
 import { userService } from '../../services/user.service.js'
@@ -14,8 +26,12 @@ import { analysisService } from '../../services/analysis.service.js'
 import { formatTime, formatDate, formatDayLabel, relativeTime, greetingForNow } from '../../lib/time.js'
 import { subjectName } from '../../data/mock/subjects.mock.js'
 import { ErrorState, LoadingBlock, SkeletonCards, EmptyState } from '../../ui/states.jsx'
-import { BentoCard, PageHeader, ProgressBar, Timeline } from '../../ui/workspace-kit.jsx'
-import { DonutChart } from '../../ui/charts.jsx'
+import { BentoCard, PageHeader, ProgressBar, StatusBadge, Timeline } from '../../ui/workspace-kit.jsx'
+import { DonutChart, CHART_TONE } from '../../ui/charts.jsx'
+import { AccountAvatar, RoleTag } from '../../ui/account-identity.jsx'
+
+/* Computed once per page load: the header eyebrow is a label, not a clock. */
+const TODAY_LABEL = formatDate(new Date())
 
 function countdownParts(targetIso) {
   const diff = new Date(targetIso).getTime() - Date.now()
@@ -111,7 +127,7 @@ export default function StudentDashboard() {
   return (
     <div>
       <PageHeader
-        eyebrow={`${greetingForNow()}, ${user.name.split(' ')[0]}`}
+        eyebrow={`${greetingForNow()}, ${user.name.split(' ')[0]} · ${TODAY_LABEL}`}
         title="Dashboard"
         description="Your examinations, classes and academic signals for today."
         actions={
@@ -130,37 +146,40 @@ export default function StudentDashboard() {
       <div className="grid gap-4 lg:grid-cols-12">
         <BentoCard className="lg:col-span-5" tone="cream" delay={0.02}>
           <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="label-xs">Student profile</p>
-              <h2 className="mt-1 font-serif text-[24px] leading-tight tracking-[-0.02em] text-ink">{user.name}</h2>
-              <p className="mt-1 text-[12px] text-ink-70">
-                {student.batch?.name} · {student.batch?.section} section
-              </p>
+            <div className="flex min-w-0 items-center gap-3">
+              <AccountAvatar name={user.name} role="student" size="lg" />
+              <div className="min-w-0">
+                <p className="label-xs">Student profile</p>
+                <h2 className="mt-0.5 font-serif text-[23px] leading-tight tracking-[-0.02em] text-ink">{user.name}</h2>
+                <p className="mt-0.5 text-[11.5px] text-[var(--cream-800)]">
+                  {student.batch?.name} · {student.batch?.section} section
+                </p>
+              </div>
             </div>
-            <span className="badge badge-ink">{student.profile?.rollNumber}</span>
+            <RoleTag role="student" />
           </div>
-          <dl className="mt-4 grid grid-cols-2 gap-x-3 gap-y-2.5 border-t border-[var(--cream-300)] pt-3.5">
-            <div>
-              <dt className="label-xs">Enrolment</dt>
-              <dd className="text-[12.5px] font-medium text-ink">{student.enrollmentId}</dd>
-            </div>
-            <div>
-              <dt className="label-xs">Target exam</dt>
-              <dd className="text-[12.5px] font-medium text-ink">{student.profile?.targetExam}</dd>
-            </div>
-            <div>
-              <dt className="label-xs">Mentor</dt>
-              <dd className="text-[12.5px] font-medium text-ink">{student.mentor?.name || '—'}</dd>
-            </div>
-            <div>
-              <dt className="label-xs">Study goal</dt>
-              <dd className="text-[12px] leading-snug text-ink-80">{student.profile?.goal}</dd>
-            </div>
+          <dl className="mt-4 grid grid-cols-2 gap-x-3 gap-y-3 border-t border-[var(--cream-300)] pt-3.5">
+            {[
+              { label: 'Roll number', value: student.profile?.rollNumber, mono: true },
+              { label: 'Enrolment', value: student.enrollmentId, mono: true },
+              { label: 'Target exam', value: student.profile?.targetExam },
+              { label: 'Mentor', value: student.mentor?.name || '—' },
+            ].map((item) => (
+              <div key={item.label}>
+                <dt className="label-xs">{item.label}</dt>
+                <dd className={`mt-0.5 text-[12.5px] font-medium text-ink ${item.mono ? 'tabular' : ''}`}>{item.value}</dd>
+              </div>
+            ))}
           </dl>
+          <div className="note-strip mt-3" data-tone="cream">
+            <Target className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span className="leading-snug">{student.profile?.goal}</span>
+          </div>
         </BentoCard>
 
         <BentoCard
           className="lg:col-span-4"
+          tone="sky"
           eyebrow="Next examination"
           delay={0.05}
           action={
@@ -183,14 +202,28 @@ export default function StudentDashboard() {
         >
           {nextExam ? (
             <div>
-              <h3 className="text-[15px] font-medium leading-snug text-ink">{nextExam.title}</h3>
-              <p className="mt-1 text-[11.5px] text-muted">
-                {nextExam.type} · {formatDate(nextExam.startAt)} at {formatTime(nextExam.startAt)}
-              </p>
-              <div className="mt-3 flex items-center gap-2 text-[11px] text-muted">
-                <span className="badge badge-sky">{nextExam.totalQuestions} questions</span>
-                <span className="badge">{nextExam.durationMinutes} min</span>
-                <span className="badge">{nextExam.totalMarks} marks</span>
+              <div className="flex items-start gap-2.5">
+                <span className="stat-icon" aria-hidden="true">
+                  <FileText className="h-3.5 w-3.5" />
+                </span>
+                <div className="min-w-0">
+                  <h3 className="text-[15px] font-medium leading-snug text-[var(--sky-900)]">{nextExam.title}</h3>
+                  <p className="mt-0.5 text-[11.5px] text-[var(--sky-800)]/80">
+                    {nextExam.type} · {formatDate(nextExam.startAt)} at {formatTime(nextExam.startAt)}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-1.5">
+                {[
+                  { label: 'Questions', value: nextExam.totalQuestions },
+                  { label: 'Minutes', value: nextExam.durationMinutes },
+                  { label: 'Marks', value: nextExam.totalMarks },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-[8px] border border-[var(--sky-200)] bg-white/85 px-2 py-1.5">
+                    <p className="text-[9px] uppercase tracking-[0.1em] text-[var(--sky-700)]">{item.label}</p>
+                    <p className="mt-0.5 text-[13px] font-medium tabular text-[var(--sky-900)]">{item.value}</p>
+                  </div>
+                ))}
               </div>
             </div>
           ) : (
@@ -198,11 +231,28 @@ export default function StudentDashboard() {
           )}
         </BentoCard>
 
-        <BentoCard className="lg:col-span-3" eyebrow="Attendance" delay={0.08} tone={attendancePct < threshold ? 'cream' : 'default'}>
+        <BentoCard
+          className="lg:col-span-3"
+          eyebrow="Attendance"
+          delay={0.08}
+          tone={attendancePct < threshold ? 'cream' : 'default'}
+          footer={
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[10.5px] text-muted">{attendance.attendedHours}h attended</span>
+              <StatusBadge tone={attendancePct < threshold ? 'warn' : 'good'} dot>
+                {attendancePct < threshold ? `Below ${threshold}%` : `Above ${threshold}%`}
+              </StatusBadge>
+            </div>
+          }
+        >
           <DonutChart
             data={[
-              { name: 'Attended', value: Math.max(attendancePct, 0.5), color: attendancePct < threshold ? '#b08d31' : '#242729' },
-              { name: 'Balance', value: Math.max(100 - attendancePct, 0.5), color: '#eef0f1' },
+              {
+                name: 'Attended',
+                value: Math.max(attendancePct, 0.5),
+                color: attendancePct < threshold ? CHART_TONE.warn : CHART_TONE.primary,
+              },
+              { name: 'Balance', value: Math.max(100 - attendancePct, 0.5), color: CHART_TONE.track },
             ]}
             height={132}
             innerRadius={42}
@@ -210,7 +260,14 @@ export default function StudentDashboard() {
             centerValue={`${attendancePct}%`}
             centerLabel="overall"
           />
-          <p className="mt-1 text-center text-[10.5px] text-soft">Threshold {threshold}% · {attendance.attendedHours}h attended</p>
+          <div className="mt-1 flex items-center justify-center gap-3">
+            <span className="legend-key" style={{ '--key': attendancePct < threshold ? CHART_TONE.warn : CHART_TONE.primary }}>
+              Attended
+            </span>
+            <span className="legend-key" style={{ '--key': CHART_TONE.track }}>
+              Missed
+            </span>
+          </div>
         </BentoCard>
       </div>
 
@@ -218,35 +275,48 @@ export default function StudentDashboard() {
       <div className="mt-4 grid gap-4 lg:grid-cols-12">
         <BentoCard
           className="lg:col-span-5"
-          tone={liveClass ? 'ink' : 'default'}
+          tone={liveClass ? 'deep' : 'sky'}
           eyebrow={liveClass ? 'Live now' : 'Upcoming class'}
           delay={0.1}
         >
           {liveClass ? (
             <>
-              <h3 className="text-[15px] font-medium leading-snug text-white">{liveClass.title}</h3>
-              <p className="mt-1 text-[11.5px] text-white/70">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-white">
+                  <span className="dot bg-[#a6e59a]" /> In session
+                </span>
+                <span className="text-[10.5px] text-white/70">Started {relativeTime(liveClass.sessionStartedAt)}</span>
+              </div>
+              <h3 className="mt-2 text-[16px] font-medium leading-snug text-white">{liveClass.title}</h3>
+              <p className="mt-1 text-[11.5px] text-white/75">
                 {liveClass.faculty?.name} · {subjectName(liveClass.subjectId)}
               </p>
-              <div className="mt-3 flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2 py-1 text-[10.5px] text-white">
-                  <span className="dot bg-[#9adf8f]" /> In session
-                </span>
-                <span className="text-[10.5px] text-white/60">Started {relativeTime(liveClass.sessionStartedAt)}</span>
-              </div>
               <Link to={`/student/live-classes/${liveClass.id}/room`} className="btn btn-sky btn-sm mt-4">
-                Join classroom <ArrowUpRight className="h-3.5 w-3.5" />
+                <Video className="h-3.5 w-3.5" /> Join classroom <ArrowUpRight className="h-3.5 w-3.5" />
               </Link>
             </>
           ) : nextClass ? (
             <>
-              <h3 className="text-[15px] font-medium leading-snug text-ink">{nextClass.title}</h3>
-              <p className="mt-1 text-[11.5px] text-muted">
-                {nextClass.faculty?.name} · {formatDayLabel(nextClass.scheduledStartAt)} at {formatTime(nextClass.scheduledStartAt)}
-              </p>
-              <Link to={`/student/live-classes/${nextClass.id}`} className="btn btn-secondary btn-sm mt-3">
-                Class details
-              </Link>
+              <div className="flex items-start gap-2.5">
+                <span className="stat-icon" aria-hidden="true">
+                  <CalendarDays className="h-3.5 w-3.5" />
+                </span>
+                <div className="min-w-0">
+                  <h3 className="text-[15px] font-medium leading-snug text-[var(--sky-900)]">{nextClass.title}</h3>
+                  <p className="mt-0.5 text-[11.5px] text-[var(--sky-800)]/80">
+                    {nextClass.faculty?.name} · {formatDayLabel(nextClass.scheduledStartAt)} at {formatTime(nextClass.scheduledStartAt)}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 flex items-center gap-2">
+                <Link to={`/student/live-classes/${nextClass.id}`} className="btn btn-primary btn-sm">
+                  Class details <ArrowUpRight className="h-3.5 w-3.5" />
+                </Link>
+                <span className="inline-flex items-center gap-1 text-[10.5px] text-[var(--sky-800)]">
+                  <Timer className="h-3 w-3" aria-hidden="true" />
+                  {relativeTime(nextClass.scheduledStartAt)}
+                </span>
+              </div>
             </>
           ) : (
             <EmptyState compact icon={Video} title="No live class scheduled" description="Your faculty schedule will appear here." />
@@ -256,36 +326,47 @@ export default function StudentDashboard() {
         <BentoCard className="lg:col-span-4" eyebrow="Quick actions" delay={0.12}>
           <div className="grid grid-cols-2 gap-2">
             {[
-              { to: '/student/doubts?tab=ai', label: 'Ask AI assistant', icon: Sparkles },
-              { to: '/student/doubts?tab=faculty', label: 'Ask faculty', icon: MessageSquare },
-              { to: '/student/recordings', label: 'Watch recording', icon: PlayCircle },
-              { to: '/student/performance', label: 'Performance', icon: TrendingUp },
+              { to: '/student/doubts?tab=ai', label: 'Ask AI assistant', icon: Sparkles, tone: 'sky', hint: 'Instant help' },
+              { to: '/student/doubts?tab=faculty', label: 'Ask faculty', icon: MessageSquare, tone: 'cream', hint: 'Goes to your teacher' },
+              { to: '/student/recordings', label: 'Watch recording', icon: PlayCircle, tone: 'white', hint: 'Published classes' },
+              { to: '/student/performance', label: 'Performance', icon: TrendingUp, tone: 'white', hint: 'Trends & topics' },
             ].map((action) => {
               const Icon = action.icon
+              const toneClass =
+                action.tone === 'sky'
+                  ? 'border-[var(--sky-200)] bg-[var(--sky-50)] hover:border-[var(--sky-400)]'
+                  : action.tone === 'cream'
+                    ? 'border-[var(--cream-300)] bg-[var(--cream-50)] hover:border-[var(--cream-500)]'
+                    : 'border-[var(--line)] bg-white hover:border-[var(--sky-300)]'
+              const iconTone = action.tone === 'cream' ? 'cream' : 'sky'
               return (
                 <Link
                   key={action.to}
                   to={action.to}
-                  className="group flex flex-col gap-2 rounded-[12px] border border-[var(--line)] bg-white p-3 transition hover:border-[var(--line-strong)] hover:shadow-[var(--shadow-sm)]"
+                  className={`group flex flex-col gap-1.5 rounded-[12px] border p-2.5 transition hover:shadow-[var(--shadow-sm)] ${toneClass}`}
                 >
-                  <Icon className="h-4 w-4 text-ink-60 transition group-hover:text-ink" aria-hidden="true" />
+                  <span className="stat-icon" data-tone={iconTone}>
+                    <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                  </span>
                   <span className="text-[11.5px] font-medium leading-snug text-ink">{action.label}</span>
+                  <span className="text-[9.5px] uppercase tracking-[0.08em] text-soft">{action.hint}</span>
                 </Link>
               )
             })}
           </div>
-          <p className="mt-3 text-[10.5px] leading-snug text-soft">
-            Teaching and doubt tools are demonstration flows backed by local mock records.
+          <p className="mt-3 text-[10px] leading-snug text-soft">
+            Doubt tools are demonstration flows backed by local mock records.
           </p>
         </BentoCard>
 
         <BentoCard
           className="lg:col-span-3"
+          tone="cream"
           eyebrow="Latest result"
           delay={0.14}
           action={
             latestResult ? (
-              <Link to={`/student/exams/${latestResult.examId}/result`} className="text-[11px] font-medium text-link hover:underline">
+              <Link to={`/student/exams/${latestResult.examId}/result`} className="text-[11px] font-medium text-[var(--cream-900)] underline-offset-2 hover:underline">
                 Open
               </Link>
             ) : null
@@ -293,13 +374,25 @@ export default function StudentDashboard() {
         >
           {latestResult ? (
             <>
-              <p className="stat-figure text-ink">{latestResult.percentage}%</p>
-              <p className="mt-1 text-[11.5px] font-medium leading-snug text-ink clamp-2">{latestResult.examTitle}</p>
-              <div className="mt-2.5 space-y-1.5 text-[11px] text-muted">
-                <p>{latestResult.awardedMarks}/{latestResult.maxMarks} marks · {latestResult.accuracy}% accuracy</p>
-                <p>{formatDate(latestResult.submittedAt)}</p>
+              <div className="flex items-baseline gap-2">
+                <p className="stat-figure text-[var(--cream-900)]">{latestResult.percentage}%</p>
+                <StatusBadge tone={latestResult.percentage >= 60 ? 'good' : latestResult.percentage >= 40 ? 'warn' : 'danger'}>
+                  {latestResult.percentage >= 60 ? 'Strong' : latestResult.percentage >= 40 ? 'Steady' : 'Needs work'}
+                </StatusBadge>
               </div>
-              <ProgressBar value={latestResult.percentage} max={100} className="mt-2.5" height={5} />
+              <p className="mt-1 text-[11.5px] font-medium leading-snug text-ink clamp-2">{latestResult.examTitle}</p>
+              <div className="mt-2 grid grid-cols-2 gap-1.5 text-[10.5px]">
+                <div className="rounded-[8px] border border-[var(--cream-300)] bg-white/70 px-2 py-1.5">
+                  <p className="text-[9px] uppercase tracking-[0.08em] text-[var(--cream-800)]">Marks</p>
+                  <p className="mt-0.5 font-medium tabular text-ink">{latestResult.awardedMarks}/{latestResult.maxMarks}</p>
+                </div>
+                <div className="rounded-[8px] border border-[var(--cream-300)] bg-white/70 px-2 py-1.5">
+                  <p className="text-[9px] uppercase tracking-[0.08em] text-[var(--cream-800)]">Accuracy</p>
+                  <p className="mt-0.5 font-medium tabular text-ink">{latestResult.accuracy}%</p>
+                </div>
+              </div>
+              <ProgressBar value={latestResult.percentage} max={100} tone="cream" className="mt-2.5" height={5} />
+              <p className="mt-1.5 text-[10px] text-[var(--cream-800)]">{formatDate(latestResult.submittedAt)}</p>
             </>
           ) : (
             <EmptyState compact icon={TrendingUp} title="No graded attempt yet" description="Results appear after your first submission." />
@@ -309,7 +402,7 @@ export default function StudentDashboard() {
 
       {/* insights, doubts, recordings, timeline */}
       <div className="mt-4 grid gap-4 lg:grid-cols-12">
-        <BentoCard className="lg:col-span-4" eyebrow="Performance insights" title="Weakest topics" delay={0.16}
+        <BentoCard className="lg:col-span-4" tone="sky" eyebrow="Performance insights" title="Weakest topics" delay={0.16}
           action={<Link to="/student/performance" className="text-[11px] font-medium text-link hover:underline">All</Link>}
         >
           {performance.topicTrend.length === 0 ? (
@@ -341,7 +434,7 @@ export default function StudentDashboard() {
             <ul className="space-y-2">
               {answeredDoubts.slice(0, 2).map((doubt) => (
                 <li key={doubt.id}>
-                  <Link to={`/student/doubts/${doubt.id}`} className="block rounded-[10px] border border-[var(--line)] p-2.5 transition hover:border-[var(--line-strong)]">
+                  <Link to={`/student/doubts/${doubt.id}`} className="block rounded-[10px] border border-[var(--sky-200)] bg-[var(--sky-50)] p-2.5 transition hover:border-[var(--sky-400)]">
                     <p className="text-[11.5px] font-medium leading-snug text-ink clamp-1">{doubt.title}</p>
                     <p className="mt-0.5 text-[10.5px] text-muted">
                       {doubt.faculty?.name} replied · {relativeTime(doubt.lastActivityAt)}
@@ -351,20 +444,20 @@ export default function StudentDashboard() {
               ))}
             </ul>
           ) : null}
-          <div className="mt-3 flex items-center gap-2 rounded-[10px] bg-[var(--surface-sunken)] px-2.5 py-2">
-            <MessageSquare className="h-3.5 w-3.5 text-ink-60" aria-hidden="true" />
-            <p className="text-[11px] text-muted">
-              {pendingDoubts} awaiting a reply · {answeredDoubts.length} with faculty replies
+          <div className="note-strip mt-3">
+            <MessageSquare className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <p className="leading-snug">
+              <span className="font-medium">{pendingDoubts} awaiting a reply</span> · {answeredDoubts.length} with faculty replies
             </p>
           </div>
         </BentoCard>
 
-        <BentoCard className="lg:col-span-4" eyebrow="Recordings" title="Recently published" delay={0.2}
+        <BentoCard className="lg:col-span-4" tone="cream" eyebrow="Recordings" title="Recently published" delay={0.2}
           action={<Link to="/student/recordings" className="text-[11px] font-medium text-link hover:underline">Library</Link>}
         >
           {recentRecording ? (
             <Link to={`/student/recordings/${recentRecording.id}`} className="group block">
-              <div className="relative overflow-hidden rounded-[12px] border border-[var(--line)]">
+              <div className="relative overflow-hidden rounded-[12px] border border-[var(--cream-300)]">
                 <img src={recentRecording.posterUrl} alt="" className="h-[92px] w-full object-cover" loading="lazy" />
                 <span className="absolute inset-0 flex items-center justify-center bg-black/25 opacity-0 transition group-hover:opacity-100">
                   <PlayCircle className="h-7 w-7 text-white" />
@@ -393,7 +486,7 @@ export default function StudentDashboard() {
             <ul className="space-y-2">
               {notifications.items.slice(0, 4).map((item) => (
                 <li key={item.id} className="flex items-start gap-2">
-                  <span className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${item.read ? 'bg-[var(--line-strong)]' : 'bg-[var(--ink)]'}`} />
+                  <span className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${item.read ? 'bg-[var(--line-strong)]' : 'bg-[var(--sky-600)]'}`} />
                   <div className="min-w-0">
                     <p className="text-[11.5px] font-medium leading-snug text-ink clamp-1">{item.title}</p>
                     <p className="text-[10.5px] text-soft">{relativeTime(item.createdAt)}</p>

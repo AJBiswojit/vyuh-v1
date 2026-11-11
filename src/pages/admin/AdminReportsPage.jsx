@@ -89,7 +89,7 @@ export default function AdminReportsPage() {
                     setReportId(report.id)
                   }}
                   className={`w-full rounded-[8px] px-2.5 py-1.5 text-left text-[11.5px] transition ${
-                    reportId === report.id ? 'bg-[var(--ink)] text-white' : 'text-ink-70 hover:bg-[var(--surface-sunken)]'
+                    reportId === report.id ? 'bg-[var(--sky-800)] text-white' : 'text-ink-70 hover:bg-[var(--sky-50)] hover:text-[var(--sky-900)]'
                   }`}
                 >
                   {report.name}

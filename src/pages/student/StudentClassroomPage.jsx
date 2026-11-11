@@ -276,7 +276,7 @@ export default function StudentClassroomPage() {
       <header className="flex shrink-0 items-center justify-between gap-2 border-b border-[var(--line)] bg-white px-3 py-2">
         <div className="flex min-w-0 items-center gap-2">
           <span className="inline-flex items-center gap-1 rounded-full bg-[#fbeeee] px-2 py-0.5 text-[10px] font-medium text-[#8c2f2f]">
-            <span className="dot bg-[#9d3c3c]" /> LIVE
+            <span className="dot bg-[var(--bad-500)]" /> LIVE
           </span>
           <div className="min-w-0">
             <p className="truncate text-[12.5px] font-medium leading-tight text-ink">{klass.title}</p>
@@ -388,7 +388,7 @@ export default function StudentClassroomPage() {
                 toast.info(next ? 'Hand raised' : 'Hand lowered', next ? 'Your faculty can see the request.' : undefined)
               }}
               className={`inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-[11px] transition ${
-                handRaised ? 'border-[#b08d31] bg-[var(--cream-100)] text-[#7a6220]' : 'border-[var(--line-strong)] bg-white text-ink'
+                handRaised ? 'border-[var(--warn-300)] bg-[var(--warn-100)] text-[var(--warn-800)]' : 'border-[var(--line-strong)] bg-white text-ink'
               }`}
               aria-pressed={handRaised}
             >
