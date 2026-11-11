@@ -7,7 +7,7 @@ import { performanceService } from '../../services/performance.service.js'
 import { formatDate } from '../../lib/time.js'
 import { ErrorState, LoadingBlock, EmptyState } from '../../ui/states.jsx'
 import { PageHeader, ProgressBar, StatusBadge } from '../../ui/workspace-kit.jsx'
-import { ComparisonBars, DonutChart, MultiLine } from '../../ui/charts.jsx'
+import { ComparisonBars, DonutChart, MultiLine, CHART_TONE } from '../../ui/charts.jsx'
 
 export default function PerformancePage() {
   const { user } = useAuth()
@@ -69,34 +69,44 @@ export default function PerformancePage() {
               { label: 'Average score', value: `${academic.averagePercentage}%`, hint: `Best ${academic.bestPercentage}%` },
               { label: 'Average accuracy', value: `${academic.averageAccuracy}%`, hint: 'Correct of attempted' },
               { label: 'Average pace', value: `${academic.averageTimePerQuestion}s`, hint: 'Per question' },
-            ].map((stat) => (
-              <div key={stat.label} className="surface-flat p-4">
-                <p className="label-xs">{stat.label}</p>
-                <p className="stat-figure mt-1.5 text-ink">{stat.value}</p>
-                <p className="mt-1 text-[10.5px] leading-snug text-soft">{stat.hint}</p>
+            ].map((stat, index) => (
+              <div key={stat.label} className="stat-tile" data-tone={index === 0 ? 'deep' : index === 1 ? 'sky' : index === 2 ? 'cream' : undefined}>
+                <p className={`label-xs ${index === 0 ? '!text-white/70' : ''}`}>{stat.label}</p>
+                <p className={`stat-figure mt-1.5 ${index === 0 ? 'text-white' : 'text-ink'}`}>{stat.value}</p>
+                <p className={`stat-tile-hint ${index === 0 ? '!text-white/70' : ''}`}>{stat.hint}</p>
               </div>
             ))}
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-12">
             <section className="surface-flat p-4 sm:p-5 lg:col-span-8">
-              <h2 className="text-[13.5px] font-medium text-ink">Score and accuracy trend</h2>
+              <div className="card-rule" aria-hidden="true" />
+              <h2 className="mt-2 text-[13.5px] font-medium text-ink">Score and accuracy trend</h2>
               <p className="mt-0.5 text-[11.5px] text-muted">Chronological across graded attempts.</p>
               <div className="mt-3">
                 <MultiLine
                   data={trendData}
                   series={[
-                    { key: 'percentage', name: 'Score %', color: '#242729' },
-                    { key: 'accuracy', name: 'Accuracy %', color: '#8ec6e4' },
+                    { key: 'percentage', name: 'Score %', color: CHART_TONE.primary },
+                    { key: 'accuracy', name: 'Accuracy %', color: CHART_TONE.sky },
                   ]}
                   height={230}
                 />
               </div>
+              <div className="mt-2 flex flex-wrap gap-3">
+                <span className="legend-key" style={{ '--key': CHART_TONE.primary }}>
+                  Score %
+                </span>
+                <span className="legend-key" style={{ '--key': CHART_TONE.sky }}>
+                  Accuracy %
+                </span>
+              </div>
             </section>
 
-            <section className="surface-flat p-4 sm:p-5 lg:col-span-4">
-              <h2 className="text-[13.5px] font-medium text-ink">Subject averages</h2>
-              <p className="mt-0.5 text-[11.5px] text-muted">Across all graded papers.</p>
+            <section className="surface-sky p-4 sm:p-5 lg:col-span-4">
+              <div className="card-rule" aria-hidden="true" />
+              <h2 className="mt-2 text-[13.5px] font-medium text-[var(--sky-900)]">Subject averages</h2>
+              <p className="mt-0.5 text-[11.5px] text-[var(--sky-800)]">Across all graded papers.</p>
               <div className="mt-2 space-y-2.5">
                 {academic.subjectAverages.length === 0 ? (
                   <p className="py-6 text-center text-[11.5px] text-soft">No subject data yet.</p>
@@ -123,7 +133,8 @@ export default function PerformancePage() {
 
           <div className="mt-4 grid gap-4 lg:grid-cols-12">
             <section className="surface-flat p-4 sm:p-5 lg:col-span-5">
-              <h2 className="text-[13.5px] font-medium text-ink">Topic accuracy</h2>
+              <div className="card-rule" data-tone="warn" aria-hidden="true" />
+              <h2 className="mt-2 text-[13.5px] font-medium text-ink">Topic accuracy</h2>
               <p className="mt-0.5 text-[11.5px] text-muted">Weakest topics first — these drive the biggest gains.</p>
               <div className="mt-3">
                 <ComparisonBars
@@ -137,7 +148,8 @@ export default function PerformancePage() {
             </section>
 
             <section className="surface-flat p-4 sm:p-5 lg:col-span-7">
-              <h2 className="text-[13.5px] font-medium text-ink">Examination history</h2>
+              <div className="card-rule" aria-hidden="true" />
+              <h2 className="mt-2 text-[13.5px] font-medium text-ink">Examination history</h2>
               <div className="table-scroll mt-3">
                 <table className="data-table">
                   <thead>
@@ -189,8 +201,15 @@ export default function PerformancePage() {
             <h3 className="text-[13px] font-medium text-ink">Attendance</h3>
             <DonutChart
               data={[
-                { name: 'Attended', value: Math.max(participation.attendance.percentage, 0.5), color: participation.attendance.percentage >= participation.attendance.threshold ? '#242729' : '#b08d31' },
-                { name: 'Balance', value: Math.max(100 - participation.attendance.percentage, 0.5), color: '#eef0f1' },
+                {
+                  name: 'Attended',
+                  value: Math.max(participation.attendance.percentage, 0.5),
+                  color:
+                    participation.attendance.percentage >= participation.attendance.threshold
+                      ? CHART_TONE.primary
+                      : CHART_TONE.warn,
+                },
+                { name: 'Balance', value: Math.max(100 - participation.attendance.percentage, 0.5), color: CHART_TONE.track },
               ]}
               height={160}
               innerRadius={46}
@@ -213,8 +232,8 @@ export default function PerformancePage() {
             </Link>
           </section>
 
-          <section className="surface-flat p-4 sm:p-5 lg:col-span-4">
-            <h3 className="text-[13px] font-medium text-ink">Classes</h3>
+          <section className="surface-cream p-4 sm:p-5 lg:col-span-4">
+            <h3 className="text-[13px] font-medium text-[var(--cream-900)]">Classes</h3>
             <dl className="mt-2 space-y-2 text-[12px]">
               <div className="flex justify-between"><dt className="text-muted">Sessions scheduled</dt><dd className="font-medium text-ink">{participation.classes.liveSessions}</dd></div>
               <div className="flex justify-between"><dt className="text-muted">Sessions attended</dt><dd className="font-medium text-ink">{participation.classes.attended}</dd></div>

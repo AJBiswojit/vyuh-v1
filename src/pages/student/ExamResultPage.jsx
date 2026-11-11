@@ -7,7 +7,7 @@ import { examService } from '../../services/exam.service.js'
 import { formatDate, formatTime, formatDuration } from '../../lib/time.js'
 import { ErrorState, LoadingBlock } from '../../ui/states.jsx'
 import { PageHeader, ProgressBar, StatusBadge } from '../../ui/workspace-kit.jsx'
-import { ComparisonBars, DonutChart } from '../../ui/charts.jsx'
+import { ComparisonBars, DonutChart, CHART_TONE } from '../../ui/charts.jsx'
 
 function ScoreDial({ percentage, tone }) {
   const size = 132
@@ -16,10 +16,10 @@ function ScoreDial({ percentage, tone }) {
   const circumference = 2 * Math.PI * radius
   const clamped = Math.max(0, Math.min(100, percentage))
   const offset = circumference - (clamped / 100) * circumference
-  const color = tone === 'danger' ? '#9d3c3c' : tone === 'warn' ? '#b08d31' : '#242729'
+  const color = tone === 'danger' ? CHART_TONE.bad : tone === 'warn' ? CHART_TONE.warn : CHART_TONE.primary
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={`Score ${percentage} percent`}>
-      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#eef0f1" strokeWidth={stroke} />
+      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={CHART_TONE.track} strokeWidth={stroke} />
       <circle
         cx={size / 2}
         cy={size / 2}
@@ -32,10 +32,10 @@ function ScoreDial({ percentage, tone }) {
         strokeDashoffset={offset}
         transform={`rotate(-90 ${size / 2} ${size / 2})`}
       />
-      <text x="50%" y="47%" textAnchor="middle" dominantBaseline="middle" style={{ font: '500 27px Zodiak, Georgia, serif', fill: '#242729' }}>
+      <text x="50%" y="47%" textAnchor="middle" dominantBaseline="middle" style={{ font: '500 27px Zodiak, Georgia, serif', fill: 'var(--ink)' }}>
         {percentage}%
       </text>
-      <text x="50%" y="62%" textAnchor="middle" style={{ font: '500 9.5px Switzer, system-ui, sans-serif', fill: 'rgba(36,39,41,0.55)', letterSpacing: '0.1em' }}>
+      <text x="50%" y="62%" textAnchor="middle" style={{ font: '500 9.5px Switzer, system-ui, sans-serif', fill: 'var(--ink-45)', letterSpacing: '0.1em' }}>
         SCORE
       </text>
     </svg>
@@ -105,9 +105,9 @@ export default function ExamResultPage() {
   const isExpired = attempt.status === 'expired'
 
   const breakdown = [
-    { name: 'Correct', value: totals.correctCount, color: '#242729' },
-    { name: 'Incorrect', value: totals.incorrectCount, color: '#aed9f0' },
-    { name: 'Unattempted', value: totals.unattemptedCount, color: '#dcdfe1' },
+    { name: 'Correct', value: totals.correctCount, color: CHART_TONE.good },
+    { name: 'Incorrect', value: totals.incorrectCount, color: CHART_TONE.bad },
+    { name: 'Unattempted', value: totals.unattemptedCount, color: CHART_TONE.track },
   ].filter((entry) => entry.value > 0)
 
   return (

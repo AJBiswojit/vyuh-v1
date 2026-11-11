@@ -128,7 +128,7 @@ export default function ChangePasswordPage() {
                 {[0, 1, 2, 3, 4].map((index) => (
                   <span
                     key={index}
-                    className={`h-1 flex-1 rounded-full ${index < strength ? 'bg-[var(--ink)]' : 'bg-[var(--line)]'}`}
+                    className={`h-1 flex-1 rounded-full ${index < strength ? 'bg-[var(--sky-700)]' : 'bg-[var(--line)]'}`}
                   />
                 ))}
               </div>

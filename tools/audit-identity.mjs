@@ -84,9 +84,12 @@ const classesOf = (el) => (el?.getAttribute('class') || '').split(/\s+/).filter(
 
 /** Which palette family a class list actually paints with. */
 function familyOf(classList) {
-  if (classList.some((c) => /var\(--ink\)|bg-\[#242729\]/.test(c))) return 'ink'
-  if (classList.some((c) => /var\(--cream-(100|200|300)\)/.test(c))) return 'cream'
-  if (classList.some((c) => /var\(--sky-(100|200|300)\)/.test(c))) return 'sky'
+  /* Admin's chip is the deep end of the sky family (--sky-900): charcoal is now
+     reserved for typography, so the "high contrast" identity colour is the
+     deepest brand blue rather than a grey-black fill. */
+  if (classList.some((c) => /bg-\[var\(--sky-900\)\]|var\(--ink\)|bg-\[#242729\]/.test(c))) return 'ink'
+  if (classList.some((c) => /var\(--cream-(100|200|300|400)\)/.test(c))) return 'cream'
+  if (classList.some((c) => /var\(--sky-(50|100|200|300|400)\)/.test(c))) return 'sky'
   return 'none'
 }
 

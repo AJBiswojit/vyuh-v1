@@ -148,7 +148,7 @@ export default function FacultyDoubtsPage() {
                       {statusLabel(doubt.status)}
                     </StatusBadge>
                     {doubt.priority === 'high' ? <StatusBadge tone="danger">High priority</StatusBadge> : null}
-                    <span className="badge">{subjectName(doubt.subjectId)}</span>
+                    <span className="badge badge-sky">{subjectName(doubt.subjectId)}</span>
                     <span className="badge badge-outline">{doubt.topicName}</span>
                     <span className="ml-auto text-[10px] text-soft">asked {relativeTime(doubt.createdAt)}</span>
                   </div>

@@ -8,7 +8,7 @@ import { examService } from '../../services/exam.service.js'
 import { formatDuration } from '../../lib/time.js'
 import { ErrorState, LoadingBlock, EmptyState } from '../../ui/states.jsx'
 import { PageHeader, ProgressBar, StatusBadge } from '../../ui/workspace-kit.jsx'
-import { ComparisonBars, TopicRadar, TrendArea } from '../../ui/charts.jsx'
+import { ComparisonBars, TopicRadar, TrendArea, CHART_TONE } from '../../ui/charts.jsx'
 
 const LEVELS = [
   { id: 'A', label: 'Overall' },
@@ -17,17 +17,46 @@ const LEVELS = [
   { id: 'D', label: 'Question level' },
 ]
 
+/* Status is the semantic spine of this page: green = correct, amber = partial,
+   red = incorrect, neutral = unattempted. Every chip, grid cell, bar and dot on
+   the page derives from this map so a student never has to relearn the code. */
 const STATUS_STYLE = {
-  correct: { tone: 'good', icon: CheckCircle2, label: 'Correct' },
-  incorrect: { tone: 'danger', icon: XCircle, label: 'Incorrect' },
-  partial: { tone: 'warn', icon: AlertCircle, label: 'Partial' },
-  unattempted: { tone: 'neutral', icon: MinusCircle, label: 'Unattempted' },
+  correct: {
+    tone: 'good',
+    icon: CheckCircle2,
+    label: 'Correct',
+    color: CHART_TONE.good,
+    cell: 'border-[var(--good-300)] bg-[var(--good-100)] text-[var(--good-800)]',
+  },
+  partial: {
+    tone: 'warn',
+    icon: AlertCircle,
+    label: 'Partial',
+    color: CHART_TONE.warn,
+    cell: 'border-[var(--warn-300)] bg-[var(--warn-100)] text-[var(--warn-800)]',
+  },
+  incorrect: {
+    tone: 'danger',
+    icon: XCircle,
+    label: 'Incorrect',
+    color: CHART_TONE.bad,
+    cell: 'border-[var(--bad-300)] bg-[var(--bad-100)] text-[var(--bad-700)]',
+  },
+  unattempted: {
+    tone: 'neutral',
+    icon: MinusCircle,
+    label: 'Unattempted',
+    color: CHART_TONE.track,
+    cell: 'border-[var(--line-strong)] bg-[var(--surface-sunken)] text-ink-70',
+  },
 }
 
 function AnswerChip({ optionId, question, variant }) {
   const option = (question?.options || []).find((item) => item.id === optionId)
   const tone =
-    variant === 'correct' ? 'border-[#cfe0c9] bg-[#eef5ec] text-[#2f532c]' : 'border-[#e8c9c9] bg-[#fbeeee] text-[#7d2b2b]'
+    variant === 'correct'
+      ? 'border-[var(--good-300)] bg-[var(--good-100)] text-[var(--good-800)]'
+      : 'border-[var(--bad-300)] bg-[var(--bad-100)] text-[var(--bad-700)]'
   return (
     <span className={`inline-flex max-w-full items-baseline gap-1 rounded-[8px] border px-2 py-1 text-[11.5px] ${tone}`}>
       <span className="font-semibold uppercase">{optionId}</span>
@@ -93,6 +122,11 @@ export default function ExamAnalysisPage() {
 
   const { analysis } = data
   const { levelA, levelB, levelC, levelD, extras, exam, attempt } = analysis
+  /* A question's "fair share" of the clock, used only to scale the average-time
+     bar. It is a reference, not a target — the copy says so. */
+  const fairShareSeconds = Math.round(
+    ((exam.durationMinutes || levelA.totalTimeSpent / 60 || 1) * 60) / Math.max(levelA.totalQuestions, 1),
+  )
   const radarData = levelC.topics.slice(0, 7).map((topic) => ({ name: topic.topicName, value: Math.max(topic.accuracy, 0) }))
 
   return (
@@ -125,23 +159,70 @@ export default function ExamAnalysisPage() {
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { label: 'Obtained marks', value: `${levelA.awardedMarks}/${levelA.maxMarks}`, hint: `${levelA.percentage}% of the paper` },
-              { label: 'Accuracy', value: `${levelA.accuracy}%`, hint: `${levelA.correctCount} correct of ${levelA.answeredCount} attempted` },
-              { label: 'Attempted', value: `${levelA.answeredCount}/${levelA.totalQuestions}`, hint: `${levelA.unattemptedCount} left blank` },
-              { label: 'Average time', value: `${levelA.averageTimePerQuestion}s`, hint: `per question · ${formatDuration(levelA.totalTimeSpent)} total` },
-            ].map((stat) => (
-              <div key={stat.label} className="surface-flat p-4">
-                <p className="label-xs">{stat.label}</p>
-                <p className="mt-1.5 text-[20px] font-medium leading-none tabular text-ink">{stat.value}</p>
-                <p className="mt-1.5 text-[10.5px] leading-snug text-soft">{stat.hint}</p>
-              </div>
-            ))}
+              {
+                label: 'Obtained marks',
+                value: `${levelA.awardedMarks}/${levelA.maxMarks}`,
+                hint: `${levelA.percentage}% of the paper`,
+                icon: Target,
+                tone: 'deep',
+                bar: levelA.percentage,
+                barTone: 'deep',
+              },
+              {
+                label: 'Accuracy',
+                value: `${levelA.accuracy}%`,
+                hint: `${levelA.correctCount} correct of ${levelA.answeredCount} attempted`,
+                icon: CheckCircle2,
+                tone: levelA.accuracy >= 60 ? 'good' : levelA.accuracy >= 40 ? 'warn' : 'bad',
+                bar: levelA.accuracy,
+                barTone: levelA.accuracy >= 60 ? 'good' : levelA.accuracy >= 40 ? 'warn' : 'danger',
+              },
+              {
+                label: 'Attempted',
+                value: `${levelA.answeredCount}/${levelA.totalQuestions}`,
+                hint: `${levelA.unattemptedCount} left blank`,
+                icon: MinusCircle,
+                tone: 'sky',
+                bar: (levelA.answeredCount / Math.max(levelA.totalQuestions, 1)) * 100,
+                barTone: 'sky',
+              },
+              {
+                label: 'Average time',
+                value: `${levelA.averageTimePerQuestion}s`,
+                hint: `per question · ${formatDuration(levelA.totalTimeSpent)} total · fair share ${fairShareSeconds}s`,
+                icon: Clock,
+                tone: 'cream',
+                bar: Math.min(100, (levelA.averageTimePerQuestion / Math.max(fairShareSeconds, 1)) * 100),
+                barTone: 'cream',
+              },
+            ].map((stat) => {
+              const Icon = stat.icon
+              const deep = stat.tone === 'deep'
+              return (
+                <div key={stat.label} className="stat-tile" data-tone={stat.tone === 'bad' ? 'warn' : stat.tone}>
+                  <div className="flex items-start justify-between gap-2">
+                    <p className={`label-xs ${deep ? '!text-white/70' : ''}`}>{stat.label}</p>
+                    <span className="stat-icon" data-tone={stat.tone === 'bad' ? 'bad' : deep ? 'deep' : stat.tone}>
+                      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                    </span>
+                  </div>
+                  <p className={`mt-1.5 text-[21px] font-medium leading-none tabular ${deep ? 'text-white' : 'text-ink'}`}>
+                    {stat.value}
+                  </p>
+                  <p className={`mt-1.5 text-[10.5px] leading-snug ${deep ? 'text-white/70' : 'text-soft'}`}>{stat.hint}</p>
+                  <ProgressBar value={stat.bar} tone={stat.barTone} height={4} className="mt-2.5" />
+                </div>
+              )
+            })}
           </div>
 
           <div className="grid gap-4 lg:grid-cols-12">
-            <section className="surface-flat p-4 sm:p-5 lg:col-span-7">
-              <h2 className="text-[13.5px] font-medium text-ink">Time distribution across questions</h2>
-              <p className="mt-0.5 text-[11.5px] text-muted">Seconds recorded per question — spot where the clock went.</p>
+            <section className="surface-cream p-4 sm:p-5 lg:col-span-7">
+              <div className="card-rule" data-tone="cream" aria-hidden="true" />
+              <h2 className="mt-2 text-[13.5px] font-medium text-ink">Time distribution across questions</h2>
+              <p className="mt-0.5 text-[11.5px] text-[var(--cream-800)]">
+                Seconds recorded per question — spot where the clock went.
+              </p>
               <div className="mt-3">
                 <TrendArea
                   data={extras.timeDistribution.map((entry) => ({ label: entry.name, seconds: entry.seconds }))}
@@ -149,12 +230,27 @@ export default function ExamAnalysisPage() {
                   name="Seconds"
                   domain={[0, 'dataMax + 20']}
                   height={210}
+                  color={CHART_TONE.cream}
+                  gradientId="analysis-time"
                 />
+              </div>
+              <div className="mt-2 flex flex-wrap gap-3">
+                <span className="legend-key" style={{ '--key': CHART_TONE.cream }}>
+                  Seconds per question
+                </span>
+                <span className="legend-key" style={{ '--key': CHART_TONE.primary }}>
+                  Correct answers
+                </span>
+                <span className="legend-key" style={{ '--key': CHART_TONE.bad }}>
+                  Incorrect
+                </span>
               </div>
             </section>
 
             <section className="surface-flat p-4 sm:p-5 lg:col-span-5">
-              <h2 className="text-[13.5px] font-medium text-ink">Section performance</h2>
+              <div className="card-rule" aria-hidden="true" />
+              <h2 className="mt-2 text-[13.5px] font-medium text-ink">Section performance</h2>
+              <p className="mt-0.5 text-[11.5px] text-muted">Marks earned per section, graded on the same bands.</p>
               <div className="mt-3 space-y-3">
                 {extras.sectionPerformance.map((section) => (
                   <div key={section.sectionId}>
@@ -178,16 +274,22 @@ export default function ExamAnalysisPage() {
           </div>
 
           <div className="grid gap-4 lg:grid-cols-3">
-            <section className="surface-flat p-4">
-              <h2 className="flex items-center gap-1.5 text-[13px] font-medium text-ink">
-                <Clock className="h-3.5 w-3.5" aria-hidden="true" /> Time management
+            <section className="surface-sky p-4">
+              <h2 className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--sky-900)]">
+                <span className="stat-icon h-5 w-5" aria-hidden="true">
+                  <Clock className="h-3 w-3" />
+                </span>
+                Time management
               </h2>
               <p className="mt-1.5 text-[12px] font-medium text-ink">{extras.timeInsight.headline}</p>
               <p className="mt-1 text-[11.5px] leading-relaxed text-muted">{extras.timeInsight.body}</p>
             </section>
-            <section className="surface-flat p-4">
-              <h2 className="flex items-center gap-1.5 text-[13px] font-medium text-ink">
-                <Target className="h-3.5 w-3.5" aria-hidden="true" /> Answer changes
+            <section className="surface-cream p-4">
+              <h2 className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--cream-900)]">
+                <span className="stat-icon h-5 w-5" data-tone="cream" aria-hidden="true">
+                  <Target className="h-3 w-3" />
+                </span>
+                Answer changes
               </h2>
               <p className="mt-1.5 text-[12px] font-medium text-ink">
                 {extras.answerChanges.changed} revised · {extras.answerChanges.improved} helped · {extras.answerChanges.harmed} cost marks
@@ -196,30 +298,51 @@ export default function ExamAnalysisPage() {
             </section>
             <section className="surface-flat p-4">
               <h2 className="flex items-center gap-1.5 text-[13px] font-medium text-ink">
-                <Clock className="h-3.5 w-3.5" aria-hidden="true" /> Slowest questions
+                <span className="stat-icon h-5 w-5" data-tone="warn" aria-hidden="true">
+                  <Clock className="h-3 w-3" />
+                </span>
+                Slowest questions
               </h2>
-              <ul className="mt-1.5 space-y-1">
-                {extras.slowest.slice(0, 4).map((item) => (
-                  <li key={item.questionId} className="flex justify-between gap-2 text-[11px]">
-                    <span className="truncate text-ink">
-                      Q{item.number} · {item.topicName}
-                    </span>
-                    <span className="shrink-0 tabular text-muted">
-                      {item.timeSpentSeconds}s · {STATUS_STYLE[item.status]?.label}
-                    </span>
-                  </li>
-                ))}
+              <ul className="mt-2 space-y-1.5">
+                {extras.slowest.slice(0, 4).map((item) => {
+                  const style = STATUS_STYLE[item.status] || STATUS_STYLE.unattempted
+                  return (
+                    <li key={item.questionId} className="flex items-center justify-between gap-2 text-[11px]">
+                      <span className="flex min-w-0 items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: style.color }} aria-hidden="true" />
+                        <span className="truncate text-ink">
+                          Q{item.number} · {item.topicName}
+                        </span>
+                      </span>
+                      <span className="shrink-0 tabular text-muted">
+                        {item.timeSpentSeconds}s · {style.label}
+                      </span>
+                    </li>
+                  )
+                })}
               </ul>
             </section>
           </div>
 
           <section className="surface-flat p-4 sm:p-5">
             <h2 className="flex items-center gap-1.5 text-[13.5px] font-medium text-ink">
-              <Lightbulb className="h-4 w-4" aria-hidden="true" /> Improvement recommendations
+              <span className="stat-icon" aria-hidden="true">
+                <Lightbulb className="h-3.5 w-3.5" />
+              </span>
+              Improvement recommendations
             </h2>
             <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
               {extras.recommendations.map((recommendation) => (
-                <div key={recommendation.id} className="rounded-[12px] border border-[var(--line)] p-3">
+                <div
+                  key={recommendation.id}
+                  className={`rounded-[12px] border p-3 ${
+                    recommendation.priority === 'high'
+                      ? 'border-[var(--bad-300)] bg-[var(--bad-50)]'
+                      : recommendation.priority === 'medium'
+                        ? 'border-[var(--warn-300)] bg-[var(--warn-50)]'
+                        : 'border-[var(--sky-200)] bg-[var(--sky-50)]'
+                  }`}
+                >
                   <div className="flex items-center gap-2">
                     <StatusBadge tone={recommendation.priority === 'high' ? 'danger' : recommendation.priority === 'medium' ? 'warn' : 'sky'}>
                       {recommendation.priority}
@@ -237,7 +360,8 @@ export default function ExamAnalysisPage() {
       {level === 'B' ? (
         <div className="space-y-4">
           <section className="surface-flat p-4 sm:p-5">
-            <h2 className="text-[13.5px] font-medium text-ink">Subject comparison</h2>
+            <div className="card-rule" aria-hidden="true" />
+            <h2 className="mt-2 text-[13.5px] font-medium text-ink">Subject comparison</h2>
             <p className="mt-0.5 text-[11.5px] text-muted">Score percentage against accuracy — a large gap means unanswered questions, not wrong concepts.</p>
             <div className="mt-3">
               <ComparisonBars
@@ -247,18 +371,35 @@ export default function ExamAnalysisPage() {
                   accuracy: bucket.accuracy,
                 }))}
                 series={[
-                  { key: 'percentage', name: 'Score %' },
-                  { key: 'accuracy', name: 'Accuracy %', color: '#aed9f0' },
+                  { key: 'percentage', name: 'Score %', color: CHART_TONE.primary },
+                  { key: 'accuracy', name: 'Accuracy %', color: CHART_TONE.sky },
                 ]}
                 height={230}
                 unit="%"
               />
             </div>
+            <div className="mt-2 flex flex-wrap gap-3">
+              <span className="legend-key" style={{ '--key': CHART_TONE.primary }}>
+                Score %
+              </span>
+              <span className="legend-key" style={{ '--key': CHART_TONE.sky }}>
+                Accuracy %
+              </span>
+            </div>
           </section>
 
           <div className="grid gap-3 sm:grid-cols-2">
             {levelB.map((bucket) => (
-              <section key={bucket.subjectId} className="surface-flat p-4">
+              <section
+                key={bucket.subjectId}
+                className={
+                  bucket.percentage >= 60
+                    ? 'surface-flat p-4 shadow-[inset_0_3px_0_var(--good-500)]'
+                    : bucket.percentage >= 35
+                      ? 'surface-flat p-4 shadow-[inset_0_3px_0_var(--warn-500)]'
+                      : 'surface-flat p-4 shadow-[inset_0_3px_0_var(--bad-500)]'
+                }
+              >
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <h3 className="text-[13px] font-medium text-ink">{bucket.subjectName}</h3>
@@ -274,13 +415,18 @@ export default function ExamAnalysisPage() {
                     { label: 'Correct', value: bucket.correct },
                     { label: 'Incorrect', value: bucket.incorrect },
                   ].map((item) => (
-                    <div key={item.label} className="rounded-[8px] bg-[var(--surface-sunken)] px-2 py-1.5">
+                    <div key={item.label} className="rounded-[8px] border border-[var(--line)] bg-[var(--sky-50)] px-2 py-1.5">
                       <dt className="label-xs">{item.label}</dt>
                       <dd className="mt-0.5 text-[12px] font-medium tabular text-ink">{item.value}</dd>
                     </div>
                   ))}
                 </dl>
-                <ProgressBar value={Math.max(bucket.percentage, 0)} height={4} className="mt-3" tone={bucket.percentage >= 60 ? 'good' : 'warn'} />
+                <ProgressBar
+                  value={Math.max(bucket.percentage, 0)}
+                  height={4}
+                  className="mt-3"
+                  tone={bucket.percentage >= 60 ? 'good' : bucket.percentage >= 35 ? 'warn' : 'danger'}
+                />
               </section>
             ))}
           </div>
@@ -291,7 +437,8 @@ export default function ExamAnalysisPage() {
         <div className="space-y-4">
           <div className="grid gap-4 lg:grid-cols-12">
             <section className="surface-flat p-4 sm:p-5 lg:col-span-7">
-              <h2 className="text-[13.5px] font-medium text-ink">Topic performance</h2>
+              <div className="card-rule" aria-hidden="true" />
+              <h2 className="mt-2 text-[13.5px] font-medium text-ink">Topic performance</h2>
               <p className="mt-0.5 text-[11.5px] text-muted">Sorted weakest first. Accuracy, marks and time per topic.</p>
               <div className="mt-3 space-y-2.5">
                 {levelC.topics.map((topic) => (
@@ -316,9 +463,10 @@ export default function ExamAnalysisPage() {
               </div>
             </section>
 
-            <section className="surface-flat p-4 sm:p-5 lg:col-span-5">
-              <h2 className="text-[13.5px] font-medium text-ink">Accuracy profile</h2>
-              <p className="mt-0.5 text-[11.5px] text-muted">Up to seven topics for legibility.</p>
+            <section className="surface-sky p-4 sm:p-5 lg:col-span-5">
+              <div className="card-rule" aria-hidden="true" />
+              <h2 className="mt-2 text-[13.5px] font-medium text-[var(--sky-900)]">Accuracy profile</h2>
+              <p className="mt-0.5 text-[11.5px] text-[var(--sky-800)]">Up to seven topics for legibility.</p>
               <div className="mt-1">
                 <TopicRadar data={radarData} height={250} />
               </div>
@@ -326,8 +474,11 @@ export default function ExamAnalysisPage() {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <section className="surface-sky p-4">
-              <h3 className="text-[12.5px] font-medium text-ink">Strong topics</h3>
+            <section className="surface-flat p-4 shadow-[inset_0_3px_0_var(--good-500)]">
+              <h3 className="flex items-center gap-1.5 text-[12.5px] font-medium text-ink">
+                <span className="h-1.5 w-1.5 rounded-full bg-[var(--good-500)]" aria-hidden="true" />
+                Strong topics
+              </h3>
               {levelC.strong.length ? (
                 <ul className="mt-2 space-y-1">
                   {levelC.strong.map((topic) => (
@@ -341,8 +492,11 @@ export default function ExamAnalysisPage() {
                 <p className="mt-1.5 text-[11.5px] text-muted">No topic crossed the 75% accuracy mark in this paper.</p>
               )}
             </section>
-            <section className="surface-cream p-4">
-              <h3 className="text-[12.5px] font-medium text-ink">Needs work</h3>
+            <section className="surface-flat p-4 shadow-[inset_0_3px_0_var(--warn-500)]">
+              <h3 className="flex items-center gap-1.5 text-[12.5px] font-medium text-ink">
+                <span className="h-1.5 w-1.5 rounded-full bg-[var(--warn-500)]" aria-hidden="true" />
+                Needs work
+              </h3>
               {levelC.weak.length ? (
                 <ul className="mt-2 space-y-1">
                   {levelC.weak.map((topic) => (
@@ -366,24 +520,20 @@ export default function ExamAnalysisPage() {
             <p className="px-1 text-[11.5px] font-medium text-ink">Questions</p>
             <div className="mt-2 grid grid-cols-6 gap-1.5">
               {levelD.map((item) => {
+                const style = STATUS_STYLE[item.status] || STATUS_STYLE.unattempted
+                const isActive = activeQuestion?.questionId === item.questionId
                 return (
                   <button
                     key={item.questionId}
                     type="button"
                     onClick={() => setSelectedQuestion(item.questionId)}
                     className={`flex h-8 w-8 items-center justify-center rounded-[7px] border text-[11px] font-semibold tabular transition ${
-                      activeQuestion?.questionId === item.questionId
-                        ? 'border-[var(--ink)] bg-[var(--ink)] text-white'
-                        : item.status === 'correct'
-                          ? 'border-[#b9d5b1] bg-[#dfeeda] text-[#2f5c2b]'
-                          : item.status === 'incorrect'
-                            ? 'border-[#c99b9b] bg-[#fbeeee] text-[#8c2f2f]'
-                            : item.status === 'partial'
-                              ? 'border-[#d9c78d] bg-[var(--cream-100)] text-[#7a6220]'
-                              : 'border-[#dcdfe1] bg-[#eef0f1] text-ink-70'
-                    }`}
+                      isActive
+                        ? 'border-[var(--sky-900)] bg-[var(--sky-800)] text-white shadow-[0_0_0_2px_var(--sky-200)]'
+                        : style.cell
+                    } hover:-translate-y-[1px]`}
                     aria-label={`Question ${item.number}, ${style.label}`}
-                    aria-current={activeQuestion?.questionId === item.questionId ? 'true' : undefined}
+                    aria-current={isActive ? 'true' : undefined}
                   >
                     {item.number}
                   </button>
@@ -395,7 +545,10 @@ export default function ExamAnalysisPage() {
                 const count = levelD.filter((item) => item.status === key).length
                 return (
                   <div key={key} className="flex items-center justify-between gap-2 text-[10.5px]">
-                    <span className="text-muted">{style.label}</span>
+                    <span className="flex items-center gap-1.5 text-muted">
+                      <span className="h-1.5 w-1.5 rounded-full" style={{ background: style.color }} aria-hidden="true" />
+                      {style.label}
+                    </span>
                     <span className="font-medium tabular text-ink">{count}</span>
                   </div>
                 )
@@ -407,7 +560,7 @@ export default function ExamAnalysisPage() {
             <section className="surface p-4 sm:p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex h-6 items-center rounded-md bg-[var(--ink)] px-1.5 text-[11px] font-semibold text-white">
+                  <span className="inline-flex h-6 items-center rounded-md bg-[var(--sky-800)] px-1.5 text-[11px] font-semibold text-white">
                     Q{activeQuestion.number}
                   </span>
                   <span className="text-[11px] text-muted">
@@ -418,9 +571,11 @@ export default function ExamAnalysisPage() {
                   <StatusBadge tone={STATUS_STYLE[activeQuestion.status]?.tone || 'neutral'} dot>
                     {activeQuestion.statusLabel}
                   </StatusBadge>
-                  <span className="badge">{activeQuestion.difficulty}</span>
-                  <span className="badge tabular">{activeQuestion.marksAwarded > 0 ? '+' : ''}{activeQuestion.marksAwarded} / {activeQuestion.marks}</span>
-                  <span className="badge tabular">{activeQuestion.timeSpentSeconds}s</span>
+                  <StatusBadge tone={activeQuestion.difficulty === 'Easy' ? 'good' : activeQuestion.difficulty === 'Hard' ? 'danger' : 'warn'}>
+                    {activeQuestion.difficulty}
+                  </StatusBadge>
+                  <span className="badge badge-cream tabular">{activeQuestion.marksAwarded > 0 ? '+' : ''}{activeQuestion.marksAwarded} / {activeQuestion.marks}</span>
+                  <span className="badge badge-sky tabular">{activeQuestion.timeSpentSeconds}s</span>
                 </div>
               </div>
 
@@ -433,11 +588,11 @@ export default function ExamAnalysisPage() {
               ) : null}
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-[10px] border border-[var(--line)] p-3">
+                <div className="rounded-[10px] border border-[var(--line)] bg-[var(--sky-50)] p-3">
                   <p className="label-xs">Your response</p>
                   <div className="mt-1.5 space-y-1.5">
                     {activeQuestion.studentAnswer === null || (Array.isArray(activeQuestion.studentAnswer) && activeQuestion.studentAnswer.length === 0) ? (
-                      <p className="text-[12px] font-medium text-[#8c2f2f]">Not answered</p>
+                      <p className="text-[12px] font-medium text-[var(--bad-700)]">Not answered</p>
                     ) : Array.isArray(activeQuestion.studentAnswer) ? (
                       activeQuestion.studentAnswer.map((optionId) => (
                         <div key={optionId}>
@@ -459,7 +614,7 @@ export default function ExamAnalysisPage() {
                   </div>
                 </div>
 
-                <div className="rounded-[10px] border border-[#cfe0c9] bg-[#f6faf5] p-3">
+                <div className="rounded-[10px] border border-[var(--good-300)] bg-[var(--good-50)] p-3">
                   <p className="label-xs">Correct response</p>
                   <div className="mt-1.5 space-y-1.5">
                     {Array.isArray(activeQuestion.correctAnswer) ? (
@@ -469,7 +624,7 @@ export default function ExamAnalysisPage() {
                         </div>
                       ))
                     ) : (
-                      <p className="text-[12px] font-medium text-[#2f532c] tabular">
+                      <p className="text-[12px] font-medium text-[var(--good-800)] tabular">
                         {formatAnswer(activeQuestion.question, activeQuestion.correctAnswer)}
                         {activeQuestion.question?.unit ? ` ${activeQuestion.question.unit}` : ''}
                       </p>
@@ -479,7 +634,7 @@ export default function ExamAnalysisPage() {
               </div>
 
               <div className="mt-4 space-y-3">
-                <div className="rounded-[10px] bg-[var(--surface-sunken)] p-3">
+                <div className="rounded-[10px] border border-[var(--sky-200)] bg-[var(--sky-50)] p-3">
                   <p className="label-xs">Step-by-step solution</p>
                   <ol className="mt-1.5 space-y-1">
                     {(activeQuestion.question?.solution || []).map((step, index) => (
@@ -497,9 +652,9 @@ export default function ExamAnalysisPage() {
                 </div>
 
                 {activeQuestion.mistakeExplanation ? (
-                  <div className="rounded-[10px] border border-[#e8c9c9] bg-[#fdf6f6] p-3">
-                    <p className="label-xs text-[#7d2b2b]">Where your answer went wrong</p>
-                    <p className="mt-1.5 text-[12px] leading-relaxed text-[#7d2b2b]/90">{activeQuestion.mistakeExplanation}</p>
+                  <div className="rounded-[10px] border border-[var(--bad-300)] bg-[var(--bad-50)] p-3">
+                    <p className="label-xs text-[var(--bad-700)]">Where your answer went wrong</p>
+                    <p className="mt-1.5 text-[12px] leading-relaxed text-[var(--bad-700)]/90">{activeQuestion.mistakeExplanation}</p>
                   </div>
                 ) : null}
 

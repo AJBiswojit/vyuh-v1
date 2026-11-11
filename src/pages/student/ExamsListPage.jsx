@@ -31,7 +31,7 @@ function ExamRow({ exam, tab }) {
     <div className="surface-flat flex flex-col gap-3 p-4 transition hover:border-[var(--line-strong)] sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="badge">{exam.type}</span>
+          <span className="badge badge-sky">{exam.type}</span>
           <StatusBadge tone={statusTone(exam.windowState)} dot>
             {statusLabel(started ? 'in-progress' : exam.windowState)}
           </StatusBadge>
@@ -111,12 +111,14 @@ export default function ExamsListPage() {
       ) : (
         <>
           {data.inProgress.length ? (
-            <div className="mb-4 rounded-[16px] border border-[var(--ink)] bg-[var(--ink)] p-4 text-white">
+            <div className="surface-deep mb-4 p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.16em] text-white/60">Attempt in progress</p>
-                  <p className="mt-1 text-[14px] font-medium">{data.inProgress[0].title}</p>
-                  <p className="mt-0.5 text-[11.5px] text-white/70">
+                  <p className="flex items-center gap-1.5 text-[9.5px] font-medium uppercase tracking-[0.16em] text-white/70">
+                    <span className="dot bg-[#a6e59a]" /> Attempt in progress
+                  </p>
+                  <p className="mt-1 text-[14px] font-medium text-white">{data.inProgress[0].title}</p>
+                  <p className="mt-0.5 text-[11.5px] text-white/75">
                     Started {relativeTime(data.inProgress[0].attempt.startedAt)} · your responses are saved
                   </p>
                 </div>

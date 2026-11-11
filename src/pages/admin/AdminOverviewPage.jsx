@@ -16,8 +16,8 @@ import useAsync from '../../lib/useAsync.js'
 import { adminService } from '../../services/admin.service.js'
 import { formatTime, relativeTime } from '../../lib/time.js'
 import { ErrorState, LoadingBlock, EmptyState } from '../../ui/states.jsx'
-import { PageHeader, ProgressBar, StatusBadge, statusLabel, statusTone } from '../../ui/workspace-kit.jsx'
-import { DonutChart, TrendArea } from '../../ui/charts.jsx'
+import { PageHeader, ProgressBar, StatTile, StatusBadge, statusLabel, statusTone } from '../../ui/workspace-kit.jsx'
+import { DonutChart, TrendArea, CHART_TONE } from '../../ui/charts.jsx'
 import Button from '../../ui/Button.jsx'
 
 export default function AdminOverviewPage() {
@@ -55,6 +55,7 @@ export default function AdminOverviewPage() {
     <div>
       <PageHeader
         eyebrow="Institute admin"
+        eyebrowTone="cream"
         title="Overview"
         description="One institute, one dataset. Every figure below is computed from stored records — nothing is estimated."
         actions={
@@ -74,29 +75,32 @@ export default function AdminOverviewPage() {
           { label: 'Pending approvals', value: counts.pendingApprovals, hint: 'Awaiting your decision', to: '/admin/approvals', icon: CheckSquare },
           { label: 'Integrity events', value: counts.unresolvedIntegrity, hint: 'Unresolved', to: '/admin/integrity', icon: Shield },
           { label: 'Flagged content', value: counts.flaggedRecordings, hint: `${counts.openTickets} open tickets`, to: '/admin/moderation', icon: Flag },
-        ].map((tile) => {
-          const Icon = tile.icon
-          return (
-            <Link key={tile.label} to={tile.to} className="surface-flat p-4 transition hover:border-[var(--line-strong)]">
-              <div className="flex items-start justify-between gap-2">
-                <p className="label-xs">{tile.label}</p>
-                <Icon className="h-3.5 w-3.5 text-soft" aria-hidden="true" />
-              </div>
-              <p className="stat-figure mt-1.5 text-ink">{tile.value}</p>
-              <p className="mt-1 text-[10.5px] text-soft">{tile.hint}</p>
-            </Link>
-          )
-        })}
+        ].map((tile, index) => (
+          <StatTile
+            key={tile.label}
+            label={tile.label}
+            value={tile.value}
+            hint={tile.hint}
+            icon={tile.icon}
+            to={tile.to}
+            tone={index === 0 ? 'deep' : index === 1 ? 'sky' : index === 2 ? 'cream' : 'default'}
+          />
+        ))}
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-12">
-        <section className="surface-flat p-4 sm:p-5 lg:col-span-4">
-          <h2 className="text-[13.5px] font-medium text-ink">Institute attendance</h2>
-          <p className="mt-0.5 text-[11px] text-muted">Duration-based across every session.</p>
+        <section className="surface-sky p-4 sm:p-5 lg:col-span-4">
+          <div className="card-rule" aria-hidden="true" />
+          <h2 className="mt-2 text-[13.5px] font-medium text-[var(--sky-900)]">Institute attendance</h2>
+          <p className="mt-0.5 text-[11px] text-[var(--sky-800)]">Duration-based across every session.</p>
           <DonutChart
             data={[
-              { name: 'Attended', value: Math.max(attendance.percentage, 0.5), color: attendance.percentage >= attendance.threshold ? '#242729' : '#b08d31' },
-              { name: 'Missed', value: Math.max(100 - attendance.percentage, 0.5), color: '#eef0f1' },
+              {
+                name: 'Attended',
+                value: Math.max(attendance.percentage, 0.5),
+                color: attendance.percentage >= attendance.threshold ? CHART_TONE.primary : CHART_TONE.warn,
+              },
+              { name: 'Missed', value: Math.max(100 - attendance.percentage, 0.5), color: CHART_TONE.track },
             ]}
             height={168}
             innerRadius={50}
@@ -123,19 +127,21 @@ export default function AdminOverviewPage() {
         </section>
 
         <section className="surface-flat p-4 sm:p-5 lg:col-span-5">
-          <h2 className="text-[13.5px] font-medium text-ink">Attendance trend</h2>
+          <div className="card-rule" aria-hidden="true" />
+          <h2 className="mt-2 text-[13.5px] font-medium text-ink">Attendance trend</h2>
           <p className="mt-0.5 text-[11px] text-muted">Monthly, computed from join/leave events.</p>
           <div className="mt-2">
             {trend.length ? (
-              <TrendArea data={trend} height={200} name="Attendance %" />
+              <TrendArea data={trend} height={200} name="Attendance %" color={CHART_TONE.sky} gradientId="admin-attendance-trend" />
             ) : (
               <EmptyState compact icon={CalendarClock} title="No sessions recorded yet" />
             )}
           </div>
         </section>
 
-        <section className="surface-flat p-4 sm:p-5 lg:col-span-3">
-          <h2 className="text-[13.5px] font-medium text-ink">Academics</h2>
+        <section className="surface-cream p-4 sm:p-5 lg:col-span-3">
+          <div className="card-rule" data-tone="cream" aria-hidden="true" />
+          <h2 className="mt-2 text-[13.5px] font-medium text-[var(--cream-900)]">Academics</h2>
           <dl className="mt-2 space-y-2 text-[11.5px]">
             <div className="flex justify-between gap-2">
               <dt className="text-muted">Graded attempts</dt>
@@ -152,8 +158,8 @@ export default function AdminOverviewPage() {
           </dl>
           <div className="mt-3 space-y-2">
             {insights.map((insight) => (
-              <div key={insight.label} className="rounded-[8px] bg-[var(--surface-sunken)] px-2.5 py-2">
-                <p className="text-[10px] uppercase tracking-wide text-soft">{insight.label}</p>
+              <div key={insight.label} className="rounded-[8px] border border-[var(--cream-300)] bg-white/75 px-2.5 py-2">
+                <p className="text-[10px] uppercase tracking-wide text-[var(--cream-800)]">{insight.label}</p>
                 <p className="mt-0.5 text-[11.5px] font-medium text-ink">{insight.value}</p>
                 <p className="mt-0.5 text-[10px] leading-snug text-muted">{insight.body}</p>
               </div>
@@ -166,7 +172,7 @@ export default function AdminOverviewPage() {
         <section className="surface-flat p-4 sm:p-5 lg:col-span-4">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-[13.5px] font-medium text-ink">Needs attention</h2>
-            <span className="badge badge-outline">{alerts.length}</span>
+            <span className="badge badge-cream">{alerts.length}</span>
           </div>
           {alerts.length === 0 ? (
             <EmptyState compact icon={AlertCircle} title="Nothing outstanding" description="No unresolved integrity or moderation items." />

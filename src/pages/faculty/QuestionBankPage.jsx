@@ -22,6 +22,11 @@ import { TextInput, TextArea, Select, FormError } from '../../ui/fields.jsx'
 import Button from '../../ui/Button.jsx'
 import { useConfirm, useToast } from '../../ui/feedback.jsx'
 
+/* Difficulty is a difficulty, so it gets an ordinary traffic-light treatment:
+   easy = green, medium = amber, hard = red. It is the only place in the bank
+   where red does not mean "failed". */
+const DIFFICULTY_TONE = { Easy: 'good', Medium: 'warn', Hard: 'danger' }
+
 const TYPE_LABEL = {
   single: 'Single correct',
   multiple: 'Multiple correct',
@@ -42,13 +47,13 @@ function QuestionPreview({ question }) {
       <div className="flex flex-wrap items-center gap-1.5">
         <StatusBadge tone="sky">{question.subjectName}</StatusBadge>
         <span className="badge badge-outline">{question.topicName}</span>
-        <span className="badge badge-outline">{question.difficulty}</span>
+        <StatusBadge tone={DIFFICULTY_TONE[question.difficulty] || 'neutral'}>{question.difficulty}</StatusBadge>
         <span className="badge badge-outline">{TYPE_LABEL[question.type] || question.type}</span>
         <span className="badge badge-outline">+{question.marks} / −{question.negativeMarks}</span>
       </div>
       <p className="whitespace-pre-line text-[12.5px] leading-relaxed text-ink">{question.text}</p>
       {question.type === 'numerical' ? (
-        <p className="rounded-[8px] bg-[var(--surface-sunken)] px-2.5 py-2 text-[11.5px] text-ink-80">
+        <p className="rounded-[8px] border border-[var(--sky-200)] bg-[var(--sky-50)] px-2.5 py-2 text-[11.5px] text-ink-80">
           Numerical answer: <span className="font-medium text-ink">{String(question.correctAnswer)}</span>
         </p>
       ) : (
@@ -59,7 +64,9 @@ function QuestionPreview({ question }) {
               <li
                 key={option.id}
                 className={`flex items-start gap-2 rounded-[8px] border px-2.5 py-1.5 text-[11.5px] ${
-                  correct ? 'border-[#b9d5b1] bg-[#f2f8f0] text-[#2f532c]' : 'border-[var(--line)] text-ink-80'
+                  correct
+                    ? 'border-[var(--good-300)] bg-[var(--good-50)] text-[var(--good-800)]'
+                    : 'border-[var(--line)] text-ink-80'
                 }`}
               >
                 <span className="font-semibold">{option.id}</span>
@@ -70,7 +77,7 @@ function QuestionPreview({ question }) {
           })}
         </ul>
       )}
-      <div className="rounded-[8px] border border-[var(--line)] bg-white p-2.5">
+      <div className="rounded-[8px] border border-[var(--cream-300)] bg-[var(--cream-50)] p-2.5">
         <p className="label-xs">Explanation shown in analysis</p>
         <p className="mt-1 text-[11.5px] leading-relaxed text-muted">{question.explanation}</p>
       </div>
@@ -266,6 +273,7 @@ export default function QuestionBankPage() {
     <div>
       <PageHeader
         eyebrow="Faculty workspace"
+        eyebrowTone="cream"
         title="Question Bank"
         description="Every question carries its subject, topic, difficulty, marking and explanation — the analysis pages read these directly."
         actions={
@@ -275,7 +283,28 @@ export default function QuestionBankPage() {
         }
       />
 
-      <div className="surface-flat mb-4 flex flex-wrap items-end gap-2 p-3">
+      <div className="mb-3 grid gap-2.5 sm:grid-cols-3">
+        {[
+          { label: 'Questions in view', value: questions.length, tone: 'sky' },
+          {
+            label: 'Difficult items',
+            value: questions.filter((question) => question.difficulty === 'Hard').length,
+            tone: 'cream',
+          },
+          {
+            label: 'In use',
+            value: questions.filter((question) => question.usageCount > 0).length,
+            tone: 'white',
+          },
+        ].map((stat) => (
+          <div key={stat.label} className="stat-tile" data-tone={stat.tone === 'white' ? undefined : stat.tone}>
+            <p className="label-xs">{stat.label}</p>
+            <p className="stat-figure mt-1 text-ink">{stat.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="surface-flat mb-4 flex flex-wrap items-end gap-2 border-[var(--sky-200)] bg-[var(--sky-50)] p-3">
         <div className="relative min-w-[190px] flex-1">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-soft" aria-hidden="true" />
           <input
@@ -374,11 +403,11 @@ export default function QuestionBankPage() {
       ) : (
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
           <div className="surface-flat overflow-hidden">
-            <div className="flex items-center justify-between gap-2 border-b border-[var(--line)] px-3 py-2">
-              <p className="text-[11.5px] font-medium text-ink">
+            <div className="flex items-center justify-between gap-2 border-b border-[var(--sky-200)] bg-[var(--sky-50)] px-3 py-2">
+              <p className="text-[11.5px] font-medium text-[var(--sky-900)]">
                 {questions.length} question{questions.length === 1 ? '' : 's'}
               </p>
-              <p className="text-[10px] text-soft">Select a row to preview</p>
+              <p className="text-[10px] text-[var(--sky-800)]">Select a row to preview</p>
             </div>
             <ul className="divide-y divide-[var(--line)]">
               {questions.map((question) => (
@@ -387,17 +416,35 @@ export default function QuestionBankPage() {
                     type="button"
                     onClick={() => setSelected(question)}
                     className={`flex w-full items-start gap-3 px-3 py-2.5 text-left transition ${
-                      selected?.id === question.id ? 'bg-[var(--sky-50)]' : 'hover:bg-[var(--surface-sunken)]'
+                      selected?.id === question.id ? 'row-selected' : 'hover:bg-[var(--sky-50)]'
                     }`}
                   >
                     <span className="mt-0.5 shrink-0">
-                      <StatusBadge tone={question.status === 'active' ? 'good' : 'neutral'}>{question.status}</StatusBadge>
+                      <StatusBadge tone={question.status === 'active' ? 'good' : 'neutral'} dot>
+                        {question.status}
+                      </StatusBadge>
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[12px] font-medium text-ink">{question.text}</span>
-                      <span className="mt-0.5 block text-[10px] text-soft">
-                        {question.subjectName} · {question.topicName} · {question.difficulty} · {TYPE_LABEL[question.type]}
-                        {question.usageCount ? ` · used ${question.usageCount}×` : ''}
+                      <span className="mt-1 flex flex-wrap items-center gap-1.5">
+                        <span className="rounded-full bg-[var(--sky-100)] px-1.5 py-[1px] text-[9px] font-medium uppercase tracking-[0.06em] text-[var(--sky-800)]">
+                          {question.subjectName}
+                        </span>
+                        <span
+                          className={`rounded-full px-1.5 py-[1px] text-[9px] font-medium uppercase tracking-[0.06em] ${
+                            question.difficulty === 'Easy'
+                              ? 'bg-[var(--good-100)] text-[var(--good-800)]'
+                              : question.difficulty === 'Hard'
+                                ? 'bg-[var(--bad-100)] text-[var(--bad-700)]'
+                                : 'bg-[var(--warn-100)] text-[var(--warn-800)]'
+                          }`}
+                        >
+                          {question.difficulty}
+                        </span>
+                        <span className="text-[9.5px] text-soft">
+                          {question.topicName} · {TYPE_LABEL[question.type]}
+                          {question.usageCount ? ` · used ${question.usageCount}×` : ''}
+                        </span>
                       </span>
                     </span>
                     <span className="shrink-0 text-[10px] text-soft">{relativeTime(question.updatedAt)}</span>
@@ -409,9 +456,9 @@ export default function QuestionBankPage() {
 
           <aside className="space-y-3">
             {selected ? (
-              <div className="surface p-4">
+              <div className="surface-cream p-4">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="text-[12px] font-medium text-ink">Preview</p>
+                  <p className="text-[12px] font-medium text-[var(--cream-900)]">Preview</p>
                   <button type="button" className="icon-btn h-6 w-6" onClick={() => setSelected(null)} aria-label="Close preview">
                     <X className="h-3 w-3" />
                   </button>

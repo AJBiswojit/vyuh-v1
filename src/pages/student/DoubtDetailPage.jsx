@@ -119,7 +119,7 @@ export default function DoubtDetailPage() {
         <div className="space-y-3">
           <article className="surface p-4">
             <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--ink)] text-[10px] font-semibold text-white">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--sky-800)] text-[10px] font-semibold text-white">
                 {user.name.split(' ').map((part) => part[0]).slice(0, 2).join('')}
               </span>
               <div>

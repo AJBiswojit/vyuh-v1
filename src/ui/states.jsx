@@ -63,15 +63,15 @@ export function ErrorState({ error, onRetry, title = 'Something went wrong', cla
   return (
     <div
       role="alert"
-      className={`rounded-[var(--radius-md)] border border-[#e8c9c9] bg-[#fdf6f6] ${compact ? 'p-4' : 'p-6'} ${className}`}
+      className={`rounded-[var(--radius-md)] border border-[var(--bad-300)] bg-[var(--bad-50)] ${compact ? 'p-4' : 'p-6'} ${className}`}
     >
       <div className="flex items-start gap-3">
-        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[#8c2f2f]" aria-hidden="true" />
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--bad-700)]" aria-hidden="true" />
         <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-medium text-[#7d2b2b]">{title}</p>
-          <p className="mt-1 text-[12.5px] leading-relaxed text-[#7d2b2b]/80">{message}</p>
+          <p className="text-[13px] font-medium text-[var(--bad-800)]">{title}</p>
+          <p className="mt-1 text-[12.5px] leading-relaxed text-[var(--bad-700)]/85">{message}</p>
           {error?.code ? (
-            <p className="mt-1.5 font-mono text-[10.5px] uppercase tracking-wide text-[#7d2b2b]/60">code: {error.code}</p>
+            <p className="mt-1.5 font-mono text-[10.5px] uppercase tracking-wide text-[var(--bad-700)]/65">code: {error.code}</p>
           ) : null}
           {onRetry ? (
             <Button size="sm" className="mt-3" icon={RefreshCw} onClick={onRetry} variant="secondary">

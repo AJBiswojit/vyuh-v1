@@ -379,7 +379,7 @@ export default function FacultyClassesPage() {
                       <StatusBadge tone={isLive ? 'danger' : statusTone(klass.status)} dot={isLive}>
                         {isLive ? 'Live' : statusLabel(klass.status)}
                       </StatusBadge>
-                      <span className="badge">{klass.subject?.name}</span>
+                      <span className="badge badge-sky">{klass.subject?.name}</span>
                       <span className="badge badge-outline">{klass.batch?.name}</span>
                       <span className="badge badge-outline">{klass.durationMinutes} min</span>
                       {klass.recordingEnabled ? <span className="badge badge-outline">Recording on</span> : null}

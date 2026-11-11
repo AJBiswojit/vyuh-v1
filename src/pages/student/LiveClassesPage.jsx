@@ -26,7 +26,7 @@ function ClassCard({ klass, tab }) {
             <StatusBadge tone={isLive ? 'danger' : statusTone(klass.status)} dot={isLive}>
               {isLive ? 'Live' : statusLabel(klass.status)}
             </StatusBadge>
-            <span className="badge">{subjectName(klass.subjectId)}</span>
+            <span className="badge badge-sky">{subjectName(klass.subjectId)}</span>
             <span className="badge badge-outline">{klass.durationMinutes} min</span>
           </div>
           <h3 className="mt-2 text-[14px] font-medium leading-snug text-ink">{klass.title}</h3>
@@ -101,7 +101,7 @@ export default function LiveClassesPage() {
       ) : (
         <>
           {data.live.length ? (
-            <div className="mb-4 rounded-[16px] bg-[var(--ink)] p-4 text-white">
+            <div className="surface-deep mb-4 p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] text-white/60">

@@ -60,7 +60,7 @@ export default function FacultyAccountPage() {
   if (loading && !data) {
     return (
       <div>
-        <PageHeader eyebrow="Faculty workspace" title="Account" />
+        <PageHeader eyebrow="Faculty workspace" eyebrowTone="cream" title="Account" />
         <LoadingBlock rows={5} />
       </div>
     )
@@ -69,7 +69,7 @@ export default function FacultyAccountPage() {
   if (error) {
     return (
       <div>
-        <PageHeader eyebrow="Faculty workspace" title="Account" />
+        <PageHeader eyebrow="Faculty workspace" eyebrowTone="cream" title="Account" />
         <ErrorState error={error} onRetry={refresh} title="Your account could not be loaded" />
       </div>
     )
@@ -79,11 +79,11 @@ export default function FacultyAccountPage() {
   const teaching = data.teaching
   return (
     <div>
-      <PageHeader eyebrow="Faculty workspace" title="Account" description="Your profile, teaching load and security settings." />
+      <PageHeader eyebrow="Faculty workspace" eyebrowTone="cream" title="Account" description="Your profile, teaching load and security settings." />
 
       <div className="grid gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
         <div className="space-y-4">
-          <section className="surface-flat p-4 text-center">
+          <section className="surface-cream p-4 text-center">
             <AccountAvatar name={profile.name} role="faculty" size="xl" className="mx-auto font-semibold" />
             <h2 className="mt-2.5 text-[15px] font-medium text-ink">{profile.name}</h2>
             <p className="text-[11.5px] text-muted">{profile.email}</p>
@@ -182,11 +182,11 @@ export default function FacultyAccountPage() {
               { label: 'Classes taken', value: teaching.classes.completed, hint: `${teaching.classes.upcoming} upcoming` },
               { label: 'Examinations', value: teaching.exams.total, hint: `${teaching.exams.published} published` },
               { label: 'Doubts answered', value: teaching.doubts.resolved, hint: `${teaching.doubts.pending} pending` },
-            ].map((stat) => (
-              <div key={stat.label} className="surface-flat p-4">
+            ].map((stat, index) => (
+              <div key={stat.label} className="stat-tile" data-tone={index === 0 ? 'sky' : index === 2 ? 'cream' : undefined}>
                 <p className="label-xs">{stat.label}</p>
                 <p className="stat-figure mt-1.5 text-ink">{stat.value}</p>
-                <p className="mt-1 text-[10.5px] text-soft">{stat.hint}</p>
+                <p className="stat-tile-hint">{stat.hint}</p>
               </div>
             ))}
           </div>

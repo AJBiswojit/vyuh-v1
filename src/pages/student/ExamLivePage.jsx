@@ -462,7 +462,7 @@ export default function ExamLivePage() {
             }`}
             title={online ? 'Connection stable' : 'Connection lost'}
           >
-            <span className={`dot ${online ? 'bg-[#4c7a45]' : 'bg-[#9d3c3c]'}`} aria-hidden="true" />
+            <span className={`dot ${online ? 'bg-[var(--good-500)]' : 'bg-[var(--bad-500)]'}`} aria-hidden="true" />
             {online ? 'Connected' : 'Offline'}
           </span>
 
@@ -517,7 +517,7 @@ export default function ExamLivePage() {
               }}
               className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] transition ${
                 currentSection === section.id
-                  ? 'border-[var(--ink)] bg-[var(--ink)] text-white'
+                  ? 'border-[var(--sky-800)] bg-[var(--sky-800)] text-white'
                   : 'border-[var(--line)] bg-white text-ink-70 hover:border-[var(--line-strong)]'
               }`}
               aria-current={currentSection === section.id ? 'true' : undefined}
@@ -541,7 +541,7 @@ export default function ExamLivePage() {
               <div className="mx-auto max-w-[860px]">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-md bg-[var(--ink)] px-1.5 text-[11px] font-semibold text-white tabular">
+                    <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-md bg-[var(--sky-800)] px-1.5 text-[11px] font-semibold text-white tabular">
                       Q{questions.findIndex((entry) => entry.questionId === currentId) + 1}
                     </span>
                     <span className="text-[11px] text-muted">

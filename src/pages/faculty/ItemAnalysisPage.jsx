@@ -7,7 +7,7 @@ import { analysisService } from '../../services/analysis.service.js'
 import { formatDate } from '../../lib/time.js'
 import { ErrorState, LoadingBlock, EmptyState } from '../../ui/states.jsx'
 import { PageHeader, ProgressBar, StatusBadge, statusLabel, statusTone } from '../../ui/workspace-kit.jsx'
-import { ComparisonBars, DonutChart } from '../../ui/charts.jsx'
+import { ComparisonBars, DonutChart, CHART_TONE } from '../../ui/charts.jsx'
 import Button from '../../ui/Button.jsx'
 import { useToast } from '../../ui/feedback.jsx'
 
@@ -217,7 +217,7 @@ export default function ItemAnalysisPage() {
                 {data.topicPerformance.slice(0, 4).map((topic, index) => (
                   <li key={topic.topicId} className="flex items-center justify-between gap-2 text-[10.5px] text-muted">
                     <span className="truncate">
-                      <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full" style={{ backgroundColor: ['#242729', '#aed9f0', '#8a7a4e', '#6aaed2'][index] }} />
+                      <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full" style={{ backgroundColor: [CHART_TONE.primary, CHART_TONE.sky, CHART_TONE.cream, CHART_TONE.good][index] }} />
                       {topic.topicName}
                     </span>
                     <span className="tabular">{topic.accuracy}%</span>

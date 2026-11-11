@@ -82,7 +82,7 @@ export default function ProfilePage() {
 
       <div className="grid gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
         <div className="space-y-4">
-          <section className="surface-flat p-4 text-center">
+          <section className="surface-cream p-4 text-center">
             <AccountAvatar name={profile.name} role="student" size="xl" className="mx-auto font-semibold" />
             <h2 className="mt-2.5 text-[15px] font-medium text-ink">{profile.name}</h2>
             <p className="text-[11.5px] text-muted">{profile.email}</p>

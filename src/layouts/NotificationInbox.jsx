@@ -76,7 +76,7 @@ export default function NotificationInbox({ align = 'right' }) {
       >
         <Bell className="h-4 w-4" />
         {unread > 0 ? (
-          <span className="absolute -right-0.5 -top-0.5 flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-[var(--ink)] px-1 text-[9px] font-semibold text-white">
+          <span className="absolute -right-0.5 -top-0.5 flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-[var(--sky-700)] px-1 text-[9px] font-semibold text-white">
             {unread > 9 ? '9+' : unread}
           </span>
         ) : null}
@@ -132,7 +132,7 @@ export default function NotificationInbox({ align = 'right' }) {
                     item.read ? '' : 'bg-[var(--cream-50)]'
                   }`}
                 >
-                  <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${item.read ? 'bg-transparent' : 'bg-[var(--ink)]'}`} />
+                  <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${item.read ? 'bg-transparent' : 'bg-[var(--sky-600)]'}`} />
                   <span className="min-w-0">
                     <span className="block text-[12px] font-medium leading-snug text-ink">{item.title}</span>
                     <span className="mt-0.5 block text-[11.5px] leading-snug text-muted clamp-2">{item.body}</span>

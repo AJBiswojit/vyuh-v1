@@ -35,6 +35,7 @@ export const ROLE_TINT = {
     border: 'border-[var(--sky-300)]',
     ring: 'ring-[var(--sky-300)]',
     avatar: 'bg-[var(--sky-200)] text-[#245268]',
+    dot: 'bg-[var(--sky-600)]',
     label: ROLE_LABELS.student,
   },
   faculty: {
@@ -44,15 +45,17 @@ export const ROLE_TINT = {
     border: 'border-[var(--cream-300)]',
     ring: 'ring-[var(--cream-300)]',
     avatar: 'bg-[var(--cream-300)] text-[#6b5c33]',
+    dot: 'bg-[var(--cream-500)]',
     label: ROLE_LABELS.faculty,
   },
   admin: {
     key: 'admin',
-    fill: 'bg-[var(--ink)]',
+    fill: 'bg-[var(--sky-900)]',
     text: 'text-white',
-    border: 'border-[var(--ink)]',
-    ring: 'ring-[var(--ink)]',
-    avatar: 'bg-[var(--ink)] text-white',
+    border: 'border-[var(--sky-900)]',
+    ring: 'ring-[var(--sky-900)]',
+    avatar: 'bg-[var(--sky-900)] text-white',
+    dot: 'bg-[var(--sky-500)]',
     label: ROLE_LABELS.admin,
   },
 }
@@ -66,6 +69,7 @@ export function roleTint(role) {
     border: 'border-[var(--line)]',
     ring: 'ring-[var(--line)]',
     avatar: 'bg-[var(--surface-sunken)] text-ink-70',
+    dot: 'bg-[var(--line-strong)]',
     label: 'Account',
   }
 }
@@ -99,7 +103,7 @@ export function AccountAvatar({ name, role, tone = 'role', size = 'md', classNam
     : tone === 'cream'
       ? 'bg-[var(--cream-200)] text-[#6b5c33]'
       : tone === 'charcoal'
-        ? 'bg-[var(--ink)] text-white'
+        ? 'bg-[var(--sky-900)] text-white'
         : 'bg-[var(--sky-300)] text-[#245268]'
   return (
     <span
@@ -126,6 +130,25 @@ export function RoleTag({ role, size = 'sm', className = '', label }) {
       title={label || tint.label}
       data-role-tag={tint.key}
     >
+      {label || tint.label}
+    </span>
+  )
+}
+
+/**
+ * Role chip with a leading status dot, for tabular user lists where the chip
+ * has to hold its own next to a name and a status pill.
+ */
+export function RoleBadge({ role, label, className = '' }) {
+  const tint = roleTint(role)
+  return (
+    <span
+      className={`inline-flex max-w-full items-center gap-1.5 rounded-full border px-2 py-[2px] text-[10px] font-medium uppercase tracking-[0.08em] ${tint.fill} ${tint.text} ${tint.border} ${className}`}
+      title={label || tint.label}
+      data-role-tag={tint.key}
+      data-role-badge="true"
+    >
+      <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${tint.dot}`} aria-hidden="true" />
       {label || tint.label}
     </span>
   )

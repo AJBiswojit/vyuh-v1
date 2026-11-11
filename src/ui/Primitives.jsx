@@ -3,17 +3,19 @@ import { Link } from 'react-router-dom'
 
 /* Shared surface + heading primitives. */
 
-export function Card({ children, className = '', as: Tag = 'div', ...rest }) {
+export function Card({ children, className = '', as: Tag = 'div', tone = 'default', ...rest }) {
+  const surface = tone === 'sky' ? 'surface-sky' : tone === 'cream' ? 'surface-cream' : 'surface'
   return (
-    <Tag className={`surface ${className}`} {...rest}>
+    <Tag className={`${surface} ${className}`} data-tone={tone} {...rest}>
       {children}
     </Tag>
   )
 }
 
-export function Panel({ children, className = '', padded = true, ...rest }) {
+export function Panel({ children, className = '', padded = true, tone = 'default', ...rest }) {
+  const surface = tone === 'sky' ? 'surface-sky' : tone === 'cream' ? 'surface-cream' : 'surface-flat'
   return (
-    <section className={`surface-flat ${padded ? 'p-4 sm:p-5' : ''} ${className}`} {...rest}>
+    <section className={`${surface} ${padded ? 'p-4 sm:p-5' : ''} ${className}`} data-tone={tone} {...rest}>
       {children}
     </section>
   )
@@ -52,7 +54,7 @@ export function SectionHeader({
 
 export function Metric({ label, value, hint, tone = 'default', className = '' }) {
   const toneClass =
-    tone === 'sky' ? 'text-link' : tone === 'danger' ? 'text-[#8c2f2f]' : tone === 'good' ? 'text-[#375f34]' : 'text-ink'
+    tone === 'sky' ? 'text-[var(--sky-700)]' : tone === 'danger' ? 'text-[var(--bad-700)]' : tone === 'good' ? 'text-[var(--good-700)]' : 'text-ink'
   return (
     <div className={className}>
       <p className="label-xs">{label}</p>

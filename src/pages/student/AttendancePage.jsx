@@ -8,7 +8,7 @@ import { formatDate, formatMinutes, formatTime } from '../../lib/time.js'
 import { subjectName } from '../../data/mock/subjects.mock.js'
 import { ErrorState, LoadingBlock, EmptyState } from '../../ui/states.jsx'
 import { PageHeader, ProgressBar, StatusBadge, statusLabel, statusTone } from '../../ui/workspace-kit.jsx'
-import { DonutChart } from '../../ui/charts.jsx'
+import { DonutChart, CHART_TONE } from '../../ui/charts.jsx'
 
 export default function AttendancePage() {
   const { user } = useAuth()
@@ -65,8 +65,12 @@ export default function AttendancePage() {
               <h2 className="text-[13px] font-medium text-ink">Overall attendance</h2>
               <DonutChart
                 data={[
-                  { name: 'Attended', value: Math.max(summary.percentage, 0.5), color: summary.percentage >= summary.threshold ? '#242729' : '#b08d31' },
-                  { name: 'Missed', value: Math.max(100 - summary.percentage, 0.5), color: '#eef0f1' },
+                  {
+                    name: 'Attended',
+                    value: Math.max(summary.percentage, 0.5),
+                    color: summary.percentage >= summary.threshold ? CHART_TONE.primary : CHART_TONE.warn,
+                  },
+                  { name: 'Missed', value: Math.max(100 - summary.percentage, 0.5), color: CHART_TONE.track },
                 ]}
                 height={180}
                 innerRadius={54}
@@ -159,7 +163,7 @@ export default function AttendancePage() {
                     type="button"
                     onClick={() => setFilter(option.id)}
                     className={`rounded-full px-2.5 py-0.5 text-[10.5px] transition ${
-                      filter === option.id ? 'bg-[var(--ink)] text-white' : 'text-ink-70 hover:bg-[var(--surface-sunken)]'
+                      filter === option.id ? 'bg-[var(--sky-800)] text-white' : 'text-ink-70 hover:bg-[var(--sky-50)] hover:text-[var(--sky-900)]'
                     }`}
                   >
                     {option.label}
