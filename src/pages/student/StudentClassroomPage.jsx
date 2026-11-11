@@ -153,7 +153,7 @@ export default function StudentClassroomPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [joined, classId, user.id])
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div className="exam-viewport items-center justify-center">
         <LoadingBlock label="Preparing the classroom" rows={4} />

@@ -247,7 +247,7 @@ export default function ExamBuilderPage() {
     )
   }
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div>
         <PageHeader eyebrow="Faculty workspace" title={editing ? 'Edit examination' : 'New examination'} />

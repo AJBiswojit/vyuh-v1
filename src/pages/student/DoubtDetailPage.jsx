@@ -70,7 +70,7 @@ export default function DoubtDetailPage() {
     }
   }
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div>
         <PageHeader eyebrow="Doubt" title="Loading thread" />

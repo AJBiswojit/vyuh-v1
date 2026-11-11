@@ -288,7 +288,12 @@ let scheduledClassId = null
   await as('faculty')
   const overview = await liveClassService.getFacultyClassOverview(ACTOR.faculty.id)
   const liveOrRecent = [...(overview.live || []), ...(overview.recent || [])]
-  const klass = liveOrRecent.find((item) => (item.attendanceRecords || []).length > 0) || liveOrRecent[0]
+  /* Reconcile a session this student actually attended — a colleague's session
+     would legitimately have no register row for them. */
+  const klass =
+    liveOrRecent.find((item) =>
+      (item.attendanceRecords || []).some((record) => record.studentId === ACTOR.student.id),
+    ) || liveOrRecent[0]
   step(wf, 'a completed session is available to reconcile', Boolean(klass?.id), `class=${klass?.id}`)
 
   const facultyRegister = klass ? await attendanceService.getClassAttendance(klass.id) : null

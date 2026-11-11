@@ -125,11 +125,18 @@ export default function useLocalMedia() {
         videoRef.current.srcObject = stream
         videoRef.current.play?.().catch(() => {})
       }
-      stream.getVideoTracks()[0].addEventListener('ended', () => {
+      const track = stream.getVideoTracks()[0]
+      const onEnded = () => {
         setScreenSharing(false)
         if (streamRef.current) attach(streamRef.current)
         else if (videoRef.current) videoRef.current.srcObject = null
-      })
+      }
+      track?.addEventListener('ended', onEnded)
+      /* The browser fires "ended" when the user stops sharing from its own UI;
+         the listener is removed with the track so a reopened share never doubles
+         up handlers. */
+      const release = () => track?.removeEventListener('ended', onEnded)
+      stream.getTracks().forEach((item) => item.addEventListener('ended', release))
       return stream
     } catch (caught) {
       if (caught?.name !== 'NotAllowedError') setError('Screen sharing could not be started.')

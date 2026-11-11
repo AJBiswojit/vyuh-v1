@@ -68,7 +68,7 @@ export default function FacultyExamsPage() {
     }
   }
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div>
         <PageHeader eyebrow="Faculty workspace" title="Examinations" />

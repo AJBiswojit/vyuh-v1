@@ -30,7 +30,7 @@ export default function AdminOverviewPage() {
     return { overview, trend }
   }, [])
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div>
         <PageHeader eyebrow="Institute admin" title="Overview" />

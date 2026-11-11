@@ -31,7 +31,7 @@ export default function AdminSettingsPage() {
 
   const { data, error, loading, refresh } = useAsync(() => adminService.getSettings(), [])
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div>
         <PageHeader eyebrow="Institute admin" title="Settings" />

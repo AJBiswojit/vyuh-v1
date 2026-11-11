@@ -189,7 +189,7 @@ export default function FacultyClassesPage() {
     )
   }
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div>
         <PageHeader eyebrow="Faculty workspace" title="Classes" />

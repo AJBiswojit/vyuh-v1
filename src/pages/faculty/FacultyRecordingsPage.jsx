@@ -178,7 +178,7 @@ export default function FacultyRecordingsPage() {
     }
   }
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div>
         <PageHeader eyebrow="Faculty workspace" title="Recordings" />

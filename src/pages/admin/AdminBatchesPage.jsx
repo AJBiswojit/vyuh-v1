@@ -189,7 +189,7 @@ export default function AdminBatchesPage() {
     }
   }
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div>
         <PageHeader eyebrow="Institute admin" title="Batches" />

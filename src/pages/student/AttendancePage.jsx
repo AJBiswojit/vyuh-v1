@@ -22,7 +22,7 @@ export default function AttendancePage() {
     return data.sessions.filter((session) => session.status === filter)
   }, [data, filter])
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div>
         <PageHeader eyebrow="Student workspace" title="Attendance" />

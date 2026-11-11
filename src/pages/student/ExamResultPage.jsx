@@ -64,7 +64,7 @@ export default function ExamResultPage() {
     return { summary, exam: examPayload.exam, attemptId }
   }, [examId, user.id])
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div>
         <PageHeader eyebrow="Examination result" title="Loading result" />

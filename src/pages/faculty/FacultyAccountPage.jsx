@@ -56,7 +56,7 @@ export default function FacultyAccountPage() {
     }
   }
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div>
         <PageHeader eyebrow="Faculty workspace" title="Account" />

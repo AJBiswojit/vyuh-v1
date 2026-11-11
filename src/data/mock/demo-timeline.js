@@ -65,12 +65,14 @@ function shiftDeep(value, offset, key = null) {
 /**
  * Anchors the authored "live" session to the current hour so that joining a
  * classroom works at any time of day, not only between 04:30 and 06:00 UTC
- * (which is what the seed literally says).
+ * (which is what the seed literally says). Sessions that are still *scheduled*
+ * are pulled forward too, so the upcoming list always contains something
+ * genuinely ahead of the clock instead of classes that have already passed.
  */
 function anchorLiveSessions(store, now) {
   const minutes = now.getUTCHours() * 60 + now.getUTCMinutes()
   const authoredStart = 4 * 60 + 30 // 04:30 UTC in the seed
-  const delta = (minutes - 25 - authoredStart) * 60000 // start 25 minutes ago
+  const delta = (minutes - 25 - authoredStart) * 60000 // live session starts 25 minutes ago
 
   const move = (value) => {
     const time = new Date(value).getTime()
@@ -83,7 +85,33 @@ function anchorLiveSessions(store, now) {
     klass.scheduledEndAt = move(klass.scheduledEndAt)
     if (klass.sessionStartedAt) klass.sessionStartedAt = move(klass.sessionStartedAt)
     if (klass.sessionEndedAt) klass.sessionEndedAt = move(klass.sessionEndedAt)
+
+    /* Join/leave events for this session are part of the same story: if the
+       session moves and its register does not, a student who attended for the
+       whole hour suddenly reads as absent, and the faculty register and the
+       student view disagree. */
+    for (const record of store.attendance || []) {
+      if (record.classId !== klass.id) continue
+      record.joinEvents = (record.joinEvents || []).map((event) => ({ ...event, at: move(event.at) }))
+      record.leaveEvents = (record.leaveEvents || []).map((event) => ({ ...event, at: move(event.at) }))
+      record.reconnectionEvents = (record.reconnectionEvents || []).map((event) => ({ ...event, at: move(event.at) }))
+    }
   }
+
+  const scheduled = (store.classes || [])
+    .filter((klass) => klass.status === 'scheduled')
+    .sort((a, b) => new Date(a.scheduledStartAt) - new Date(b.scheduledStartAt))
+
+  scheduled.forEach((klass, index) => {
+    /* First upcoming session in ~2h, then one per following day. */
+    const target = new Date(now.getTime() + (index === 0 ? 2 : 24 * (index + 1)) * 3600000)
+    const originalStart = new Date(klass.scheduledStartAt).getTime()
+    const originalEnd = new Date(klass.scheduledEndAt).getTime()
+    const length = originalEnd - originalStart
+    target.setMinutes(originalStart % 3600000 === 1800000 ? 30 : 0, 0, 0)
+    klass.scheduledStartAt = target.toISOString()
+    klass.scheduledEndAt = new Date(target.getTime() + length).toISOString()
+  })
 
   /* Attempts carry live countdowns; re-anchor anything still running. */
   for (const attempt of store.attempts || []) {

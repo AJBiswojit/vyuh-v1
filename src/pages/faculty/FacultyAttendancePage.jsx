@@ -87,7 +87,7 @@ export default function FacultyAttendancePage() {
     }
   }
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div>
         <PageHeader eyebrow="Faculty workspace" title="Attendance" />

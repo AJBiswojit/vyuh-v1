@@ -337,7 +337,7 @@ function updateClear(conversationId) {
       item.id === conversationId ? { ...item, messages: [], updatedAt: nowIso() } : item,
     ),
   )
-  return { ok: true }
+  return loadStore().aiConversations.find((item) => item.id === conversationId) || { ok: true, id: conversationId, messages: [] }
 }
 
 /* ------------------- contextual mock AI response engine ------------------- */

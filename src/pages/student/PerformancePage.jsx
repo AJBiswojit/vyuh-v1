@@ -25,7 +25,7 @@ export default function PerformancePage() {
       }))
   }, [data])
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div>
         <PageHeader eyebrow="Student workspace" title="Performance" />

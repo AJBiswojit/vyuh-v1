@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Download, FileBarChart, Filter, Printer, RefreshCw } from 'lucide-react'
 import useAsync from '../../lib/useAsync.js'
 import { adminService } from '../../services/admin.service.js'
@@ -30,9 +30,6 @@ export default function AdminReportsPage() {
   const batches = useAsync(() => batchService.listBatches(), [])
   const exams = useAsync(() => examService.listExams(), [])
 
-  useEffect(() => {
-    setQuery('')
-  }, [reportId])
 
   const rows = useMemo(() => {
     const source = data?.rows || []
@@ -87,7 +84,10 @@ export default function AdminReportsPage() {
               <li key={report.id}>
                 <button
                   type="button"
-                  onClick={() => setReportId(report.id)}
+                  onClick={() => {
+                    setQuery('')
+                    setReportId(report.id)
+                  }}
                   className={`w-full rounded-[8px] px-2.5 py-1.5 text-left text-[11.5px] transition ${
                     reportId === report.id ? 'bg-[var(--ink)] text-white' : 'text-ink-70 hover:bg-[var(--surface-sunken)]'
                   }`}

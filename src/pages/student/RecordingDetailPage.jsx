@@ -53,7 +53,7 @@ export default function RecordingDetailPage() {
     }
   }
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div>
         <PageHeader eyebrow="Recording" title="Loading" />

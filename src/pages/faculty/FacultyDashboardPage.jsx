@@ -36,7 +36,7 @@ export default function FacultyDashboardPage() {
     return { classes, exams, doubts, questionStats, teaching }
   }, [user.id])
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div>
         <PageHeader eyebrow="Faculty workspace" title={`${greetingForNow()}, ${user.name.split(' ')[0]}`} />

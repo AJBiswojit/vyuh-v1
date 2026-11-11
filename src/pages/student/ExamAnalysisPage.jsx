@@ -62,7 +62,7 @@ export default function ExamAnalysisPage() {
     return data.analysis.levelD.find((item) => item.questionId === selectedQuestion) || data.analysis.levelD[0]
   }, [data, selectedQuestion])
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div>
         <PageHeader eyebrow="Examination analysis" title="Loading analysis" />

@@ -103,7 +103,7 @@ export default function FacultyExamDetailPage() {
     }
   }
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div>
         <PageHeader eyebrow="Faculty workspace" title="Examination" />

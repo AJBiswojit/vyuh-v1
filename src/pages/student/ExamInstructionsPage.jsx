@@ -61,7 +61,7 @@ export default function ExamInstructionsPage() {
     }
   }
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div>
         <PageHeader eyebrow="Examination" title="Instructions" />

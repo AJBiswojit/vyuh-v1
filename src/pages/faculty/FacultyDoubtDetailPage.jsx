@@ -69,7 +69,7 @@ export default function FacultyDoubtDetailPage() {
     }
   }
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div>
         <PageHeader eyebrow="Faculty workspace" title="Doubt" />

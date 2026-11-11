@@ -143,7 +143,7 @@ export default function FacultyClassStudioPage({ classId, onExit, embedded = fal
     return () => clearTimeout(timer)
   }, [joined])
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div className="flex min-h-[320px] items-center justify-center">
         <LoadingBlock label="Loading session" rows={3} />

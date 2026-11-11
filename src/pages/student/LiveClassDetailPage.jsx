@@ -19,7 +19,7 @@ export default function LiveClassDetailPage() {
     return { access, attendance }
   }, [classId, user.id])
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div>
         <PageHeader eyebrow="Live class" title="Loading session" />

@@ -408,7 +408,7 @@ export default function ExamLivePage() {
   const totalQuestions = questions.length
 
   /* --------------------------- guard conditions ------------------------ */
-  if (loading) {
+  if (loading && !data) {
     return (
       <div className="flex min-h-screen items-center justify-center p-6">
         <div className="w-full max-w-[520px]">

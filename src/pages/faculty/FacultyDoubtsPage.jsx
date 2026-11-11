@@ -36,7 +36,7 @@ export default function FacultyDoubtsPage() {
     )
   }, [data, tab, search])
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div>
         <PageHeader eyebrow="Faculty workspace" title="Doubts" />

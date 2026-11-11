@@ -416,7 +416,13 @@ export const liveClassService = {
       const store = loadStore()
       const classes = store.classes
         .filter((item) => item.facultyId === facultyId)
-        .map(decorateClass)
+        /* Attendance rows are attached here as well as in getClass: the faculty
+           dashboard and Classes list read this shape, and "0 attendance records"
+           for a session that has a full register was simply wrong. */
+        .map((klass) => ({
+          ...decorateClass(klass),
+          attendanceRecords: store.attendance.filter((record) => record.classId === klass.id),
+        }))
         .sort((a, b) => new Date(b.scheduledStartAt) - new Date(a.scheduledStartAt))
       return {
         live: classes.filter((item) => item.status === 'live'),

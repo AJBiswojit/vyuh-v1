@@ -101,7 +101,7 @@ export default function AdminPoliciesPage() {
     }
   }
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div>
         <PageHeader eyebrow="Institute admin" title="Policies" />

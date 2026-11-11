@@ -29,15 +29,14 @@ function AIAssistant({ conversations, onConversationsChange }) {
   const [activeId, setActiveId] = useState(conversations[0]?.id || null)
   const [input, setInput] = useState('')
   const [pending, setPending] = useState(false)
-  const [messages, setMessages] = useState(conversations[0]?.messages || [])
+  /* The message list is never stored: it always comes from the conversation the
+     parent owns, so a reply cannot be shown twice or lost after a re-render. */
+  const [draftMessages, setDraftMessages] = useState(conversations[0]?.messages || [])
   const endRef = useRef(null)
 
-  useEffect(() => {
-    if (!activeId && conversations.length) {
-      setActiveId(conversations[0].id)
-      setMessages(conversations[0].messages)
-    }
-  }, [conversations, activeId])
+  const resolvedActiveId = activeId || conversations[0]?.id || null
+  const activeConversation = conversations.find((item) => item.id === resolvedActiveId) || null
+  const messages = activeConversation?.messages ?? draftMessages
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
@@ -47,7 +46,10 @@ function AIAssistant({ conversations, onConversationsChange }) {
     setActiveId(conversationId)
     try {
       const conversation = await doubtService.getConversation(conversationId)
-      setMessages(conversation.messages)
+      onConversationsChange(
+        conversations.map((item) => (item.id === conversation.id ? conversation : item)),
+      )
+      setDraftMessages(conversation.messages)
     } catch (caught) {
       toast.error('Conversation could not be opened', caught?.message)
     }
@@ -58,23 +60,31 @@ function AIAssistant({ conversations, onConversationsChange }) {
       const conversation = await doubtService.createConversation(user.id)
       onConversationsChange([conversation, ...conversations])
       setActiveId(conversation.id)
-      setMessages([])
+      setDraftMessages([])
     } catch (caught) {
       toast.error('Could not start a conversation', caught?.message)
     }
   }
 
   const clear = async () => {
-    if (!activeId) return
-    await doubtService.clearConversation(activeId)
-    setMessages([])
-    toast.info('Chat cleared', 'The conversation is empty; the thread itself is kept.')
+    if (!resolvedActiveId) return
+    try {
+      const cleared = await doubtService.clearConversation(resolvedActiveId)
+      const conversation = cleared.messages ? cleared : { ...activeConversation, messages: [] }
+      onConversationsChange(
+        conversations.map((item) => (item.id === resolvedActiveId ? conversation : item)),
+      )
+      setDraftMessages([])
+      toast.info('Chat cleared', 'The conversation is empty; the thread itself is kept.')
+    } catch (caught) {
+      toast.error('The conversation could not be cleared', caught?.message)
+    }
   }
 
   const send = async (text) => {
     const value = String(text ?? input).trim()
     if (!value) return
-    let conversationId = activeId
+    let conversationId = resolvedActiveId
     if (!conversationId) {
       const conversation = await doubtService.createConversation(user.id)
       onConversationsChange([conversation, ...conversations])
@@ -85,7 +95,7 @@ function AIAssistant({ conversations, onConversationsChange }) {
     setInput('')
     try {
       const result = await doubtService.sendAssistantMessage(conversationId, value)
-      setMessages(result.conversation.messages)
+      setDraftMessages(result.conversation.messages)
       onConversationsChange(
         conversations.map((conversation) => (conversation.id === conversationId ? result.conversation : conversation)),
       )
@@ -116,7 +126,7 @@ function AIAssistant({ conversations, onConversationsChange }) {
                 type="button"
                 onClick={() => selectConversation(conversation.id)}
                 className={`w-full rounded-[8px] px-2 py-1.5 text-left text-[11.5px] transition ${
-                  activeId === conversation.id ? 'bg-[var(--sky-50)] font-medium text-ink' : 'text-ink-70 hover:bg-[var(--surface-sunken)]'
+                  resolvedActiveId === conversation.id ? 'bg-[var(--sky-50)] font-medium text-ink' : 'text-ink-70 hover:bg-[var(--surface-sunken)]'
                 }`}
               >
                 <span className="block truncate">{conversation.title}</span>
@@ -314,7 +324,7 @@ export default function DoubtsPage() {
     }
   }
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div>
         <PageHeader eyebrow="Student workspace" title="Doubts" />
