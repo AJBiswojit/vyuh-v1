@@ -1,15 +1,14 @@
 /* Account-identity colour audit.
 
    The original defect was that role labels were tinted from each user's seeded
-   `avatarTone`, which is shuffled per person — so a Student could read cream
-   and an admin sky, and the same role looked different on the header, the
-   sidebar footer and the profile page.
+   `avatarTone`, which is shuffled per person. That is still guarded here.
 
-   This audit mounts the real app for all three roles and asserts that every
-   identity surface (header, sidebar footer, mobile drawer, account page)
-   renders the SAME tint family for a given role, that the family is the one
-   the design system assigns (student sky / faculty cream / admin ink), and that
-   nothing on an identity surface still derives its colour from `avatarTone`.
+   The workspace shell no longer shows a personal identity block in the header,
+   sidebar footer or mobile drawer, and the shared header carries no breadcrumb
+   either; those surfaces now offer an account link and sign-out. Identity colour
+   is therefore asserted on the surfaces that do
+   render it (profile/account pages, student dashboard, user tables), and the
+   shell is asserted to be free of the removed blocks.
 
    node tools/audit-identity.mjs */
 import { JSDOM } from 'jsdom'
@@ -23,11 +22,7 @@ for (const k of ['HTMLElement', 'Element', 'Node', 'Event', 'CustomEvent', 'Mous
 globalThis.getComputedStyle = window.getComputedStyle.bind(window)
 globalThis.requestAnimationFrame = (cb) => setTimeout(() => cb(Date.now()), 16)
 globalThis.cancelAnimationFrame = (id) => clearTimeout(id)
-const Noop = class {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
+const Noop = class { observe() {} unobserve() {} disconnect() {} }
 globalThis.ResizeObserver = window.ResizeObserver = Noop
 globalThis.IntersectionObserver = window.IntersectionObserver = Noop
 globalThis.matchMedia = window.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} })
@@ -53,7 +48,6 @@ const { createRoot } = await import('react-dom/client')
 const { MemoryRouter } = await import('react-router-dom')
 const App = (await load('/src/App.jsx')).default
 const { authService } = await load('/src/services/auth.service.js')
-const { NAV_ITEMS } = await load('/src/lib/navigation.js')
 const { ROLE_TINT } = await load('/src/ui/account-identity.jsx')
 
 const EMAIL = {
@@ -61,11 +55,10 @@ const EMAIL = {
   faculty: 'aarav.mishra@vyuhacademy.edu.in',
   admin: 'meera.kulkarni@vyuhacademy.edu.in',
 }
-const HOME = { student: '/student/dashboard', faculty: '/faculty/dashboard', admin: '/admin/dashboard' }
+const HOME = { student: '/student/dashboard', faculty: '/faculty/dashboard', admin: '/admin/overview' }
 const ACCOUNT = { student: '/student/profile', faculty: '/faculty/account', admin: '/admin/account' }
 const LABEL = { student: 'Student', faculty: 'Faculty', admin: 'Institute Admin' }
 const EXPECTED_FAMILY = { student: 'sky', faculty: 'cream', admin: 'ink' }
-const FAMILY_HINT = { sky: 'sky', cream: 'cream', ink: 'ink' }
 
 const rootEl = window.document.getElementById('root')
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
@@ -84,8 +77,8 @@ const classesOf = (el) => (el?.getAttribute('class') || '').split(/\s+/).filter(
 
 /** Which palette family a class list actually paints with. */
 function familyOf(classList) {
-  /* Admin's chip is the deep end of the sky family (--sky-900): charcoal is now
-     reserved for typography, so the "high contrast" identity colour is the
+  /* Admin's chip is the deep end of the sky family (--sky-900): charcoal is
+     reserved for typography, so the high-contrast identity colour is the
      deepest brand blue rather than a grey-black fill. */
   if (classList.some((c) => /bg-\[var\(--sky-900\)\]|var\(--ink\)|bg-\[#242729\]/.test(c))) return 'ink'
   if (classList.some((c) => /var\(--cream-(100|200|300|400)\)/.test(c))) return 'cream'
@@ -93,27 +86,10 @@ function familyOf(classList) {
   return 'none'
 }
 
-function identityBlock(role) {
-  const block = rootEl.querySelector(`[data-identity="${role}"]`)
-  if (!block) return null
-  const avatar = block.querySelector('[data-identity-avatar]')
-  const tag = block.querySelector('[data-role-tag]')
-  return {
-    name: text(block.querySelector('[data-identity-name]')),
-    raw: text(block),
-    avatarFamily: familyOf(classesOf(avatar)),
-    avatarTone: avatar?.getAttribute('data-identity-avatar'),
-    tagRole: tag?.getAttribute('data-role-tag'),
-    tagFamily: familyOf(classesOf(tag)),
-    tagLabel: text(tag),
-  }
-}
-
-function pageIdentity() {
-  const main = rootEl.querySelector('main')
-  if (!main) return null
-  const avatar = main.querySelector('[data-identity-avatar]')
-  const tag = main.querySelector('[data-role-tag]')
+function identityIn(scope) {
+  const avatar = scope?.querySelector('[data-identity-avatar]')
+  const tag = scope?.querySelector('[data-role-tag]')
+  if (!avatar && !tag) return null
   return {
     avatarFamily: familyOf(classesOf(avatar)),
     avatarTone: avatar?.getAttribute('data-identity-avatar'),
@@ -123,15 +99,10 @@ function pageIdentity() {
   }
 }
 
-/* every CSS variable the identity components paint with must actually be
-   defined — a missing token renders as `transparent`, which is how a label
-   silently disappears rather than looking wrong */
+/* every CSS variable the identity components paint with must be defined */
 const { readFileSync, readdirSync } = await import('node:fs')
 const stylesDir = new URL('../src/styles/', import.meta.url)
-const cssText = readdirSync(stylesDir)
-  .filter((f) => f.endsWith('.css'))
-  .map((f) => readFileSync(new URL(f, stylesDir), 'utf8'))
-  .join('\n')
+const cssText = readdirSync(stylesDir).filter((f) => f.endsWith('.css')).map((f) => readFileSync(new URL(f, stylesDir), 'utf8')).join('\n')
 const defined = new Set([...cssText.matchAll(/--([a-z0-9-]+)\s*:/gi)].map((m) => m[1]))
 const usedTokens = new Set()
 const missingTokens = new Set()
@@ -145,65 +116,45 @@ for (const role of ['student', 'faculty', 'admin']) {
   await mount(HOME[role])
   if (errors.length) problems.push(`[${role}] console error on ${HOME[role]}: ${errors.shift()}`)
 
-  const surfaces = []
-
-  /* 1 — header profile */
-  const header = identityBlock(role)
-  if (!header) problems.push(`[${role}] header has no identity block`)
-  else surfaces.push({ where: 'header', ...header })
-
-  /* 2 — desktop sidebar footer */
-  const sidebar = [...rootEl.querySelectorAll('[data-identity]')].find((el) => el.closest('aside'))
-  if (!sidebar) problems.push(`[${role}] sidebar footer has no identity block`)
-  else {
-    const avatar = sidebar.querySelector('[data-identity-avatar]')
-    const tag = sidebar.querySelector('[data-role-tag]')
-    surfaces.push({
-      where: 'sidebar',
-      name: text(sidebar.querySelector('[data-identity-name]')),
-      avatarFamily: familyOf(classesOf(avatar)),
-      avatarTone: avatar?.getAttribute('data-identity-avatar'),
-      tagRole: tag?.getAttribute('data-role-tag'),
-      tagFamily: familyOf(classesOf(tag)),
-      tagLabel: text(tag),
-    })
+  /* 1 — removed shell surfaces must stay removed */
+  const header = rootEl.querySelector('header')
+  const aside = rootEl.querySelector('aside')
+  if (header?.querySelector('[data-identity]')) problems.push(`[${role}] header still shows a profile identity block`)
+  if (aside?.querySelector('[data-identity]')) problems.push(`[${role}] sidebar still shows a profile identity block`)
+  if (/Frontend demonstration|All records are local mock data|Public site/i.test(aside?.textContent || '')) {
+    problems.push(`[${role}] sidebar still shows the frontend demonstration card`)
   }
 
-  /* 3 — mobile drawer (open it, then check the card above the nav) */
+  /* 2 — workspace role context is still present, from the shared RoleTag */
+  const roleChip = aside?.querySelector('[data-role-tag]')
+  if (roleChip?.getAttribute('data-role-tag') !== role) problems.push(`[${role}] sidebar role chip missing or wrong`)
+  if (text(roleChip) !== LABEL[role]) problems.push(`[${role}] sidebar role chip says "${text(roleChip)}"`)
+
+  /* 3 — mobile drawer carries no personal identity either */
   const menuButton = [...rootEl.querySelectorAll('button')].find((b) => /open navigation/i.test(b.getAttribute('aria-label') || ''))
-  if (!menuButton) problems.push(`[${role}] no mobile navigation trigger`)
-  else {
+  if (menuButton) {
     menuButton.dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true, view: window }))
     await sleep(600)
     const drawer = rootEl.querySelector('.fixed.inset-0')
-    const card = drawer?.querySelector('[data-identity]')
-    if (!card) problems.push(`[${role}] mobile drawer has no identity block`)
-    else {
-      const avatar = card.querySelector('[data-identity-avatar]')
-      const tag = card.querySelector('[data-role-tag]')
-      surfaces.push({
-        where: 'drawer',
-        name: text(card.querySelector('[data-identity-name]')),
-        avatarFamily: familyOf(classesOf(avatar)),
-        avatarTone: avatar?.getAttribute('data-identity-avatar'),
-        tagRole: tag?.getAttribute('data-role-tag'),
-        tagFamily: familyOf(classesOf(tag)),
-        tagLabel: text(tag),
-      })
-    }
+    if (drawer?.querySelector('[data-identity]')) problems.push(`[${role}] mobile drawer still shows a profile identity block`)
     const close = [...rootEl.querySelectorAll('button')].find((b) => /close navigation/i.test(b.getAttribute('aria-label') || ''))
     close?.dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true, view: window }))
     await sleep(300)
   }
 
-  /* 4 — the account page itself */
+  /* 4 — the account page keeps its role-tinted identity */
   await mount(ACCOUNT[role])
   if (errors.length) problems.push(`[${role}] console error on ${ACCOUNT[role]}: ${errors.shift()}`)
-  const page = pageIdentity()
+  const page = identityIn(rootEl.querySelector('main'))
   if (!page) problems.push(`[${role}] ${ACCOUNT[role]} has no identity block`)
-  else {
-    const nameEl = rootEl.querySelector('main [data-identity-name], main h2')
-    surfaces.push({ where: 'account page', name: text(nameEl) || '(no name)', ...page })
+  else report.push({ role, where: 'account page', ...page })
+
+  /* 5 — the student dashboard profile card uses the same family */
+  if (role === 'student') {
+    await mount(HOME.student)
+    const dashboard = identityIn(rootEl.querySelector('main'))
+    if (!dashboard) problems.push('[student] dashboard has no identity block')
+    else report.push({ role, where: 'dashboard', ...dashboard })
   }
 
   /* --- assertions -------------------------------------------------- */
@@ -211,52 +162,42 @@ for (const role of ['student', 'faculty', 'admin']) {
   const tint = ROLE_TINT[role]
   if (!tint) problems.push(`[${role}] has no ROLE_TINT entry`)
 
-  for (const s of surfaces) {
-    if (s.tagRole !== role) problems.push(`[${role}] ${s.where}: role chip says "${s.tagRole}"`)
-    if (s.tagLabel !== LABEL[role]) problems.push(`[${role}] ${s.where}: chip label "${s.tagLabel}" != "${LABEL[role]}"`)
-    if (s.tagFamily !== expected) problems.push(`[${role}] ${s.where}: chip family "${s.tagFamily}" != "${expected}"`)
-    if (s.avatarFamily !== expected) problems.push(`[${role}] ${s.where}: avatar family "${s.avatarFamily}" != "${expected}"`)
-    if (s.avatarTone !== role) problems.push(`[${role}] ${s.where}: avatar tone "${s.avatarTone}" is not role-derived`)
-    if (!s.name) problems.push(`[${role}] ${s.where}: no name shown`)
+  for (const surface of report.filter((entry) => entry.role === role)) {
+    if (surface.tagRole !== role) problems.push(`[${role}] ${surface.where}: role chip says "${surface.tagRole}"`)
+    if (surface.tagLabel !== LABEL[role]) problems.push(`[${role}] ${surface.where}: chip label "${surface.tagLabel}" != "${LABEL[role]}"`)
+    if (surface.tagFamily !== expected) problems.push(`[${role}] ${surface.where}: chip family "${surface.tagFamily}" != "${expected}"`)
+    if (surface.avatarFamily !== expected) problems.push(`[${role}] ${surface.where}: avatar family "${surface.avatarFamily}" != "${expected}"`)
+    if (surface.avatarTone !== role) problems.push(`[${role}] ${surface.where}: avatar tone "${surface.avatarTone}" is not role-derived`)
   }
 
-  /* the same role must never produce two different families across surfaces */
-  const families = new Set(surfaces.map((s) => s.tagFamily))
+  const families = new Set(report.filter((entry) => entry.role === role).map((entry) => entry.tagFamily))
   if (families.size > 1) problems.push(`[${role}] inconsistent families across surfaces: ${[...families].join(', ')}`)
 
-  /* every visible role chip on the page must be this role's chip */
   const strays = [...rootEl.querySelectorAll('[data-role-tag]')].filter((el) => el.getAttribute('data-role-tag') !== role)
   if (strays.length) problems.push(`[${role}] ${strays.length} stray role chip(s) from another role`)
 
-  /* no surviving identity surface tinted straight from the seeded tone */
   const seeded = [...rootEl.querySelectorAll('[data-identity-avatar]')].filter((el) =>
     ['sky', 'cream', 'charcoal'].includes(el.getAttribute('data-identity-avatar')),
   )
   if (seeded.length) problems.push(`[${role}] ${seeded.length} identity avatar(s) still use a seeded avatarTone`)
 
-  for (const el of rootEl.querySelectorAll('[data-identity], [data-identity] *')) {
+  for (const el of rootEl.querySelectorAll('[data-identity], [data-identity] *, [data-identity-avatar], [data-role-tag]')) {
     for (const m of (el.getAttribute('class') || '').matchAll(/var\(--([a-z0-9-]+)\)/gi)) {
       usedTokens.add(m[1])
       if (!defined.has(m[1])) missingTokens.add(m[1])
     }
   }
-
-  report.push({ role, expected, surfaces })
 }
 
 if (root) root.unmount()
 await server.close()
 
 for (const r of report) {
-  console.log(`\n${r.role.toUpperCase()} — expected ${r.expected}`)
-  for (const s of r.surfaces) {
-    console.log(`  · ${s.where.padEnd(13)} name="${s.name}" chip="${s.tagLabel}" chip=${s.tagFamily} avatar=${s.avatarFamily}/${s.avatarTone}`)
-  }
+  console.log(`· ${r.role.padEnd(8)} ${r.where.padEnd(13)} chip="${r.tagLabel}" chip=${r.tagFamily} avatar=${r.avatarFamily}/${r.avatarTone}`)
 }
 
 console.log(`\n· ${usedTokens.size} design tokens used by identity surfaces, all defined in src/styles (${defined.size} tokens available)`)
 for (const t of missingTokens) console.log(`  x undefined token --${t}`)
-
 if (missingTokens.size) problems.push(`${missingTokens.size} identity surface(s) paint with an undefined design token`)
 
 if (problems.length) {
@@ -265,4 +206,4 @@ if (problems.length) {
   console.log(`\n${problems.length} IDENTITY PROBLEM(S)\n`)
   process.exit(1)
 }
-console.log('\nIDENTITY CHECKS PASS (one colour family per role, identical on header, sidebar, drawer and account page)\n')
+console.log('\nIDENTITY CHECKS PASS (no shell identity blocks, one colour family per role on account pages)\n')

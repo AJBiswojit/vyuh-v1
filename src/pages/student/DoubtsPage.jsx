@@ -2,8 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import {
   ArrowRight,
+  BookOpen,
+  CalendarClock,
+  CheckCircle2,
+  Clock3,
   CornerDownRight,
   MessageSquare,
+  MessageSquarePlus,
   Paperclip,
   Plus,
   Send,
@@ -16,12 +21,120 @@ import useAsync from '../../lib/useAsync.js'
 import { doubtService } from '../../services/doubt.service.js'
 import { relativeTime } from '../../lib/time.js'
 import { subjectName, SUBJECTS } from '../../data/mock/subjects.mock.js'
+import { EXPERTS } from '../../content.js'
 import { ErrorState, LoadingBlock, EmptyState, Modal } from '../../ui/states.jsx'
 import { PageHeader, StatusBadge, statusLabel, statusTone } from '../../ui/workspace-kit.jsx'
+import { AccountAvatar } from '../../ui/account-identity.jsx'
 import { TextArea, TextInput, Select, FormError } from '../../ui/fields.jsx'
 import Button from '../../ui/Button.jsx'
 import { useToast } from '../../ui/feedback.jsx'
 import { validateForm, rules } from '../../lib/validation.js'
+
+/* Faculty portraits are already published on the landing page in `EXPERTS`.
+   Reuse those exact asset references instead of duplicating faculty records
+   or generating new imagery in the doubts UI. */
+const normaliseName = (name) => String(name || '').trim().toLowerCase()
+const FACULTY_IMAGE_BY_NAME = new Map(
+  EXPERTS.map((expert) => [normaliseName(expert.name), expert.image]),
+)
+const facultyPhotoFor = (name) => FACULTY_IMAGE_BY_NAME.get(normaliseName(name)) || null
+const isFacultyAvailable = (availability) => /available/i.test(String(availability || ''))
+const subjectForFaculty = (faculty) => {
+  const label = String(faculty?.subjects?.[0] || '').toLowerCase()
+  return SUBJECTS.find((subject) => subject.name.toLowerCase() === label) || null
+}
+
+function FacultyPhoto({ name }) {
+  const [failed, setFailed] = useState(false)
+  const src = facultyPhotoFor(name)
+
+  if (!src || failed) {
+    return (
+      <span
+        data-faculty-fallback="true"
+        className="inline-flex h-[68px] w-[68px] shrink-0 items-center justify-center rounded-full border-2 border-white bg-[var(--cream-100)] ring-1 ring-[var(--cream-300)]"
+      >
+        <AccountAvatar name={name} role="faculty" size="xl" className="h-[62px] w-[62px] text-[16px]" />
+      </span>
+    )
+  }
+
+  return (
+    <img
+      src={src}
+      alt={`${name} profile photograph`}
+      width="68"
+      height="68"
+      loading="lazy"
+      decoding="async"
+      onError={() => setFailed(true)}
+      data-faculty-photo={src}
+      className="h-[68px] w-[68px] shrink-0 rounded-full border-2 border-white bg-[var(--sky-50)] object-cover object-top ring-1 ring-[var(--sky-200)] shadow-[var(--shadow-xs)] transition duration-200 group-hover:ring-[var(--sky-400)] group-focus-visible:ring-[var(--sky-400)]"
+    />
+  )
+}
+
+function FacultyAvailability({ availability }) {
+  const available = isFacultyAvailable(availability)
+  const Icon = available ? CheckCircle2 : Clock3
+  const label = availability || 'Availability not set'
+  return (
+    <span
+      data-availability={available ? 'available' : 'busy'}
+      aria-label={`Availability: ${label}`}
+      className="inline-flex min-w-0"
+    >
+      <StatusBadge tone={available ? 'good' : 'warn'} className="min-w-0 max-w-full overflow-hidden">
+        <Icon className="h-3 w-3 shrink-0" aria-hidden="true" />
+        <span className="min-w-0 truncate">{label}</span>
+      </StatusBadge>
+    </span>
+  )
+}
+
+function FacultyCard({ faculty, onAsk }) {
+  const availabilityLabel = faculty.availability || 'Availability not set'
+  const schedule = faculty.officeHours || 'Schedule not set'
+  const expertise = faculty.subjects?.join(' · ') || 'General'
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={() => onAsk(faculty)}
+        data-faculty-card={faculty.id}
+        data-faculty-name={faculty.name}
+        data-faculty-subject={faculty.subjects?.[0] || ''}
+        aria-label={`Ask ${faculty.name}, ${faculty.designation || 'faculty'}. ${expertise} expertise. ${availabilityLabel}. Schedule ${schedule}.`}
+        className="group flex w-full items-start gap-3 rounded-[12px] border border-[var(--line)] bg-white p-3 text-left transition duration-150 hover:border-[var(--sky-300)] hover:bg-[var(--sky-50)] hover:shadow-[var(--shadow-sm)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sky-500)] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+      >
+        <FacultyPhoto key={faculty.name} name={faculty.name} />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[13px] font-semibold leading-tight text-ink">{faculty.name}</p>
+          <p className="mt-0.5 truncate text-[10.5px] text-soft">{faculty.designation || 'Faculty'}</p>
+          <p className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[10px] text-muted">
+            <BookOpen className="h-3 w-3 shrink-0 text-[var(--sky-700)]" aria-hidden="true" />
+            <span className="truncate">{expertise}</span>
+          </p>
+          <p className="mt-1 flex min-w-0 items-center gap-1.5 text-[10px] text-soft">
+            <CalendarClock className="h-3 w-3 shrink-0 text-[var(--ink-45)]" aria-hidden="true" />
+            <span className="truncate">{schedule}</span>
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <FacultyAvailability availability={faculty.availability} />
+            <span
+              data-ask-action="true"
+              className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full border border-[var(--sky-200)] bg-[var(--sky-100)] px-2 py-1 text-[10px] font-medium text-[var(--sky-800)] transition group-hover:border-[var(--sky-400)] group-hover:bg-[var(--sky-200)] group-focus-visible:bg-[var(--sky-200)]"
+            >
+              <MessageSquarePlus className="h-3 w-3" aria-hidden="true" />
+              Ask
+              <ArrowRight className="h-3 w-3 transition group-hover:translate-x-0.5" aria-hidden="true" />
+            </span>
+          </div>
+        </div>
+      </button>
+    </li>
+  )
+}
 
 function AIAssistant({ conversations, onConversationsChange }) {
   const { user } = useAuth()
@@ -288,6 +401,19 @@ export default function DoubtsPage() {
     setSearchParams(next === 'faculty' ? {} : { tab: next })
   }
 
+  const selectFaculty = (faculty) => {
+    const subject = subjectForFaculty(faculty)
+    setForm((current) => ({
+      ...current,
+      facultyId: faculty.id,
+      subjectId: subject?.id || current.subjectId,
+      topicId: subject?.topics?.[0]?.id || current.topicId,
+    }))
+    setErrors({})
+    setFormError(null)
+    setAskOpen(true)
+  }
+
   const selectedSubject = useMemo(() => SUBJECTS.find((subject) => subject.id === form.subjectId), [form.subjectId])
 
   const submitDoubt = async (event) => {
@@ -370,7 +496,7 @@ export default function DoubtsPage() {
           onConversationsChange={(conversations) => setData((current) => ({ ...current, conversations }))}
         />
       ) : (
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_360px]">
           <div className="space-y-2.5">
             {data.doubts.length === 0 ? (
               <div className="surface-flat">
@@ -426,27 +552,7 @@ export default function DoubtsPage() {
               <p className="text-[12px] font-medium text-ink">Faculty for your batch</p>
               <ul className="mt-2 space-y-2">
                 {data.facultyDirectory.map((faculty) => (
-                  <li key={faculty.id} className="rounded-[10px] border border-[var(--line)] p-2.5">
-                    <p className="text-[11.5px] font-medium text-ink">{faculty.name}</p>
-                    <p className="text-[10px] text-soft">{faculty.designation}</p>
-                    <p className="mt-1 text-[10px] text-muted">{faculty.subjects.join(' · ')}</p>
-                    <p className="mt-0.5 text-[10px] text-soft">{faculty.officeHours}</p>
-                    <div className="mt-1.5 flex items-center justify-between">
-                      <span className={`badge ${faculty.availability?.includes('Available') ? 'badge-good' : 'badge-cream'}`}>
-                        {faculty.availability}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setForm((current) => ({ ...current, facultyId: faculty.id, subjectId: faculty.subjects[0] === 'Physics' ? 'sub_phy' : current.subjectId }))
-                          setAskOpen(true)
-                        }}
-                        className="text-[10.5px] font-medium text-link hover:underline"
-                      >
-                        Ask
-                      </button>
-                    </div>
-                  </li>
+                  <FacultyCard key={faculty.id} faculty={faculty} onAsk={selectFaculty} />
                 ))}
               </ul>
             </section>

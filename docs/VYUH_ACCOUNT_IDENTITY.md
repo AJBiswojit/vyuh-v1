@@ -1,108 +1,105 @@
-# Account-label colour fix
+# Account identity and shared workspace shell
 
-Date: 11 November 2026 · Branch: `arena/da8d1112-vyuh-v1`
+Date: 11 November 2026 · Branch: `arena/02e3e69d-vyuh-v1`
 
-## What was wrong
+## Historical colour fix
 
-Every account identity surface in Vyuh tinted its avatar from the user's seeded
+Every account identity surface used to tint its avatar from the user's seeded
 `avatarTone` field. That field is shuffled per person (8 sky / 6 cream /
-4 charcoal across the demo roster), so the colour a label showed had nothing to
-do with the role:
-
-- the sidebar footer could show the Institute Admin in sky and a Student in
-  charcoal;
-- the header used a separate avatar with no role label at all;
-- the three profile/account pages used a hard-coded `bg-[var(--ink)]` avatar and,
-  on Student and Faculty, showed no role label — only a roll/employee number and
-  a status pill;
-- the sidebar role caption was a plain muted string, not a role indicator.
-
-Nothing was broken in the sense of empty output — it was inconsistent, and the
-only role signal (a small uppercase word) had no colour and no contrast.
-
-## What changed
-
-Styling now has a single source: `src/ui/account-identity.jsx`.
+4 charcoal across the demo roster), so the colour a label showed had nothing
+to do with the role. The fix made `src/ui/account-identity.jsx` the single
+source of truth: role-derived avatars, role tags and role badges.
 
 | Role | Family | Chip fill / text | Contrast | Avatar |
 | --- | --- | --- | --- | --- |
 | Student | sky | `--sky-100` `#e3f2fb` / `#245268` | 7.4:1 | `--sky-200` tint, `#245268` initials |
 | Faculty | warm cream | `--cream-200` `#f5f0df` / `#6b5c33` | 5.8:1 | `--cream-300` tint, `#6b5c33` initials |
-| Institute Admin | charcoal | `--ink` `#242729` / `#ffffff` | 15.0:1 | `--ink` tint, white initials |
+| Institute Admin | deepest brand blue | `--sky-900` `#1b4057` / `#ffffff` | 10.95:1 | `--sky-900`, white initials |
 
 All values are existing tokens from `src/styles/workspace.css`; no new palette,
-no gradients, no new dependency. The chip is a pill with a hairline border of
-the same family, uppercase at `0.08em` tracking, so it reads as a label and not
-as a button.
+no gradients, no new dependency. The seeded `avatarTone` field remains in the
+mock data but is not read by identity surfaces.
 
-Surfaces updated:
+## Shell simplification (this pass)
 
-1. **Header profile** — avatar + role chip; below `lg` the name is dropped to
-   protect header space, from `lg` up it is avatar + name + role chip. Same
-   colours as everywhere else.
-2. **Sidebar footer** — avatar + name + role chip (+ title when the user has one).
-3. **Mobile drawer** — the same identity card above the navigation (the drawer
-   is where phones show account identity, since the sidebar footer is desktop-only).
-4. **Sidebar role caption** — now the role chip plus the word "workspace".
-5. **Student profile / Faculty account / Admin account** — role-coloured avatar
-   and a role chip alongside the existing roll/employee number and status pills.
-   Layout, copy and fields untouched.
+The personal identity block was removed from the global header, the desktop
+sidebar footer and the mobile drawer for all three roles through the single
+`WorkspaceLayout`. Avatar/initials, name, personal role badge and roll /
+employee / enrolment ID no longer appear in those shell locations. The
+complete breadcrumb (workspace role badge, separator/arrow and current page
+title) was also removed from the shared header. Its left side now has only the
+responsive navigation toggle; the right side has search, the notification bell
+with its unread counter and the other existing controls. No replacement element
+or empty spacer was added.
 
-Removed: the local `initials()` helpers and the `Avatar` component in
-`WorkspaceLayout` (now a single implementation), and the hard-coded charcoal
-avatar on all three account pages. The seeded `avatarTone` field stays in the
-mock data unused by identity surfaces, so nothing else that reads it changed.
+The bottom sidebar section was reduced to essential actions, not replaced with
+another information card or a duplicate identity:
+
+- expanded desktop sidebar: **Account** (links to `ACCOUNT_PATH[role]`) and
+  **Sign out**;
+- collapsed desktop sidebar: expand, account and sign-out icon buttons with
+  accessible labels;
+- mobile drawer: the workspace role tag + "workspace" and the existing
+  **Sign out** action.
+
+`ACCOUNT_PATH` in `src/lib/navigation.js` is the single account destination
+per workspace (`/student/profile`, `/faculty/account`, `/admin/account`). Those
+pages remain in navigation and keep their role-tinted avatar, role tag, profile
+fields, password change and save actions. Authentication, logout, role guards
+and routing are untouched.
+
+The obsolete `AccountIdentity` component was removed from the shared UI
+module, and the now-unused `ArrowUpRight` import was dropped from
+`WorkspaceLayout`. `AccountAvatar`, `RoleTag`, `RoleBadge`, `roleTint` and
+`initialsOf` remain because account pages, the student dashboard profile card
+and Admin user tables still use them. The inline **Frontend demonstration**
+sidebar card (heading, mock-data copy and Public site link) was also removed;
+navigation now owns the full remaining height with rebalanced bottom padding,
+and no replacement promotional card was introduced.
+
+## Where identity now appears
+
+1. Student profile / Faculty account / Admin account pages — role-coloured
+   avatar, role tag, name, email, identifier and editable fields.
+2. Student dashboard profile card — the same role-coloured primitives.
+3. Admin user-management table — `RoleBadge` per user.
+4. Workspace context — `RoleTag` plus "workspace" in the sidebar/drawer.
+   This identifies the workspace, not a person.
 
 ## Verification
 
-`tools/audit-identity.mjs` mounts the real app (jsdom + Vite `ssrLoadModule`) for
-all three demo accounts and inspects every identity surface by its role data
-attribute, at dashboard and account-page routes, with the mobile drawer opened:
+`tools/audit-identity.mjs` mounts the real app (jsdom + Vite
+`ssrLoadModule`) for all three demo accounts and checks that:
 
-```
-STUDENT — expected sky
-  · header        name="Ananya Sharma"      chip="Student"        chip=sky    avatar=sky/student
-  · sidebar       name="Ananya Sharma"      chip="Student"        chip=sky    avatar=sky/student
-  · drawer        name="Ananya Sharma"      chip="Student"        chip=sky    avatar=sky/student
-  · account page  name="Ananya Sharma"      chip="Student"        chip=sky    avatar=sky/student
+- no header, sidebar or drawer contains `[data-identity]`;
+- the sidebar contains no Frontend demonstration card or Public site link;
+- the sidebar role chip is present and correct;
+- account-page avatars and role tags use the role-derived family, carry the
+  right role and label, and never fall back to a seeded tone;
+- every CSS variable used by an identity surface is defined;
+- no page logs a console error.
 
-FACULTY — expected cream
-  · header        name="Aarav Mishra"       chip="Faculty"        chip=cream  avatar=cream/faculty
-  · sidebar       name="Aarav Mishra"       chip="Faculty"        chip=cream  avatar=cream/faculty
-  · drawer        name="Aarav Mishra"       chip="Faculty"        chip=cream  avatar=cream/faculty
-  · account page  name="Aarav Mishra"       chip="Faculty"        chip=cream  avatar=cream/faculty
+`tools/audit-workspace-shell.mjs` additionally checks the demo card, header
+identity/breadcrumb, account link, sign-out (including the collapsed sidebar),
+search, notification panel, Profile/Account pages, direct URLs, refresh, mobile
+drawer, route guards and state persistence through the real app DOM for Student,
+Faculty and Institute Admin.
 
-ADMIN — expected ink
-  · header        name="Dr. Meera Kulkarni" chip="Institute Admin" chip=ink    avatar=ink/admin
-  · sidebar       name="Dr. Meera Kulkarni" chip="Institute Admin" chip=ink    avatar=ink/admin
-  · drawer        name="Dr. Meera Kulkarni" chip="Institute Admin" chip=ink    avatar=ink/admin
-  · account page  name="Dr. Meera Kulkarni" chip="Institute Admin" chip=ink    avatar=ink/admin
-```
+`tools/audit-header.mjs` (`npm run audit:header`) mounts Dashboard, Exams,
+Doubts, Question Bank, Admin Overview and other routes for all three roles,
+asserts the navbar has exactly the hamburger and the `ml-auto` controls group,
+and captures the rendered `<header>` HTML in `docs/VYUH_HEADER_AUDIT.md`.
+Result: **12/12 rendered-header checks passed**; the shared-shell audit is
+**45/45**.
 
-The audit fails the build if a surface disagrees on family, if a chip carries
-another role, if any identity avatar still reports a seeded tone (`sky` /
-`cream` / `charcoal` instead of a role), if a class list paints with a CSS
-variable that is not defined in `src/styles`, or if any page logs a console error.
-
-Regression checks after the change:
-
-| Check | Result |
-| --- | --- |
-| `node tools/audit-identity.mjs` | pass — 12 surfaces, 3 roles, 6 tokens all defined |
-| `node tools/audit-routes.mjs` | ALL CLEAR |
-| `node tools/audit-sections.mjs` | clean (9 student sections) |
-| `node tools/audit-interactions.mjs` | ALL CLEAR |
-| `node tools/audit-responsive.mjs` | pass — 17 reachable links per role on mobile |
-| `node tools/audit-workflows.mjs` | ALL WORKFLOWS PASS |
-| `node tools/check-imports.mjs` | ok — 131 files |
-| `npx oxlint src` | 0 errors, 33 warnings (advisory, pre-existing) |
-| `npm run build` | ✓ built in ~1.7 s |
+See `docs/VYUH_GLOBAL_UI.md` for notification hierarchy and the full regression
+matrix.
 
 ## Limits
 
-- jsdom has no layout engine, so this proves structure, class family and
-  presence — not pixels. Colour contrast above is computed from the hex values,
-  not measured from a screenshot.
-- The three demo accounts are the only identities exercised; a newly seeded user
-  inherits the same role colours automatically because they come from the role,
-  not from the user record.
+- jsdom has no layout engine, so these audits prove structure, data
+  attributes, class families and service state — not pixels. Colour contrast
+  above is computed from the hex values, not measured from a screenshot.
+- The three demo accounts are the only identities exercised; a newly seeded
+  user inherits the same role colours automatically because they come from the
+  role, not the user record.

@@ -3,28 +3,30 @@ import { ROLE_LABELS } from '../lib/navigation.js'
 /* ------------------------------------------------------------------
    Account identity — the one place role colour is decided.
 
-   Every account identity surface in Vyuh (header profile, sidebar footer,
-   the profile/account pages and any role chip) renders through these two
+   Every account identity surface in Vyuh (profile/account pages, the student
+   dashboard profile card, user tables and role chips) renders through these
    components, so a person sees the same colours for the same role on every
-   screen, at every breakpoint.
+   screen, at every breakpoint. The workspace header, sidebar footer and
+   mobile drawer no longer carry a personal identity block; they link to the
+   account page and expose a sign-out action instead.
 
    Colour assignments stay inside the existing design system: each role gets
-   one of the three palette families, always as a pale fill (sky 100,
-   cream 200) or the charcoal ink, paired with the darker text step of the
+   one of the palette families, always as a pale fill (sky 100, cream 200) or
+   the deepest brand blue (sky 900), paired with the darker text step of the
    same family so contrast clears WCAG AA at these small sizes:
 
      Student          sky    #e3f2fb fill · #245268 text   7.4:1
      Faculty          cream  #f5f0df fill · #6b5c33 text   5.8:1
-     Institute admin  ink    #242729 fill · #ffffff text  15.0:1
+     Institute admin  sky 900 #1b4057 fill · #ffffff text  10.95:1
 
    Avatar discs reuse the same family one step deeper (sky 200 / cream 300 /
-   ink), so name, avatar and role chip read as one unit instead of three
-   unrelated colours, and no surface depends on the seeded tone.
+   sky 900), so name, avatar and role chip read as one unit instead of three
+   unrelated colours, and no identity surface depends on the seeded tone.
 
    These are deliberately not the seeded `avatarTone` values: those are
    shuffled per user for variety, which is exactly why role labels used to
-   look random. `avatarTone` still drives decorative avatars elsewhere, but
-   identity is decided by role.
+   look random. `avatarTone` remains in the mock data but is not read by
+   identity surfaces; identity is decided by role.
 ------------------------------------------------------------------- */
 
 export const ROLE_TINT = {
@@ -154,45 +156,6 @@ export function RoleBadge({ role, label, className = '' }) {
   )
 }
 
-/**
- * Avatar + name + role. Used by the header, the sidebar footer and the mobile
- * drawer so all three are pixel-identical apart from layout props.
- */
-export function AccountIdentity({
-  user,
-  role,
-  size = 'md',
-  stacked = false,
-  className = '',
-  nameClassName = 'text-[12px] font-medium text-ink',
-  showRole = true,
-  showName = true,
-}) {
-  if (!showName) {
-    /* compact variant: avatar + role chip only, for tight header space */
-    return (
-      <span className={`flex min-w-0 items-center gap-1.5 ${className}`} data-identity={role || 'unknown'}>
-        <AccountAvatar name={user?.name} role={role} size={size} />
-        {showRole ? <RoleTag role={role} size="xs" /> : null}
-      </span>
-    )
-  }
-  return (
-    <span className={`flex min-w-0 items-center gap-2.5 ${className}`} data-identity={role || 'unknown'}>
-      <AccountAvatar name={user?.name} role={role} size={size} />
-      <span className={`min-w-0 ${stacked ? '' : 'flex flex-col leading-tight'}`}>
-        <span className={`block truncate ${nameClassName}`} data-identity-name>
-          {user?.name || 'Vyuh account'}
-        </span>
-        {showRole ? (
-          <span className="mt-1 flex items-center gap-1.5">
-            <RoleTag role={role} size="xs" />
-            {user?.title || user?.enrollmentId ? (
-              <span className="truncate text-[10px] text-soft">{user.title || user.enrollmentId}</span>
-            ) : null}
-          </span>
-        ) : null}
-      </span>
-    </span>
-  )
-}
+/* The former `AccountIdentity` (avatar + name + role + identifier) was removed
+   together with the header profile block and the sidebar identity footer. The
+   remaining surfaces use `AccountAvatar` / `RoleTag` / `RoleBadge` directly. */

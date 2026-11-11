@@ -1,31 +1,30 @@
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import { Suspense, useCallback, useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import {
   ChevronLeft,
-  ChevronRight,
   LogOut,
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
   Search,
+  User,
   X,
-  ArrowUpRight,
 } from 'lucide-react'
 import { Logo, Wordmark } from '../components/Icons.jsx'
-import { NAV_ITEMS, ROLE_LABELS, activeNavItem } from '../lib/navigation.js'
+import { ACCOUNT_PATH, NAV_ITEMS, ROLE_LABELS, activeNavItem } from '../lib/navigation.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../ui/feedback.jsx'
 import NotificationInbox from './NotificationInbox.jsx'
 import CommandPalette from './CommandPalette.jsx'
-import { AccountIdentity, RoleTag } from '../ui/account-identity.jsx'
+import { RoleTag } from '../ui/account-identity.jsx'
 import ErrorBoundary from '../ui/ErrorBoundary.jsx'
 import RouteFallback from '../ui/RouteFallback.jsx'
 
 const COLLAPSE_KEY = 'vyuh:sidebar-collapsed'
 
 export default function WorkspaceLayout() {
-  const { role, user, logout } = useAuth()
+  const { role, logout } = useAuth()
   const toast = useToast()
   const navigate = useNavigate()
   const location = useLocation()
@@ -44,10 +43,6 @@ export default function WorkspaceLayout() {
 
   const items = NAV_ITEMS[role] || []
   const active = activeNavItem(role, location.pathname)
-  const crumbs = useMemo(() => {
-    const segments = location.pathname.split('/').filter(Boolean)
-    return segments.slice(1)
-  }, [location.pathname])
 
   useEffect(() => {
     try {
@@ -120,7 +115,9 @@ export default function WorkspaceLayout() {
         </div>
       ) : null}
 
-      <nav aria-label={`${ROLE_LABELS[role]} navigation`} className="thin-scroll flex-1 overflow-y-auto px-2 pb-4">
+      {/* The demonstration card was removed: navigation now owns the full
+          remaining height, with extra bottom breathing room before the footer. */}
+      <nav aria-label={`${ROLE_LABELS[role]} navigation`} className="thin-scroll flex-1 overflow-y-auto px-2 pb-5 pt-1">
         <ul className="space-y-0.5">
           {items.map((item) => {
             const Icon = item.icon
@@ -149,42 +146,50 @@ export default function WorkspaceLayout() {
         </ul>
       </nav>
 
-      {expanded ? (
-        <div className="mx-3 mb-3 rounded-[14px] border border-[var(--cream-300)] bg-[var(--cream-100)] p-3">
-          <p className="text-[11px] font-medium text-[var(--cream-900)]">Frontend demonstration</p>
-          <p className="mt-1 text-[10.5px] leading-snug text-muted">
-            All records are local mock data. Camera and screen-share are local-only previews.
-          </p>
-          <Link to="/" className="mt-2 inline-flex items-center gap-1 text-[10.5px] font-medium text-link hover:underline">
-            Public site <ArrowUpRight className="h-3 w-3" />
-          </Link>
-        </div>
-      ) : null}
-
-      <div className={`border-t border-[var(--line)] p-2.5 ${expanded ? '' : 'flex justify-center'}`}>
+      {/* Account footer: no personal identity block. One link to the existing
+          account page and one sign-out action, present in both sidebar states. */}
+      <div className={`ws-sidebar-foot ${expanded ? '' : 'ws-sidebar-foot--compact'}`}>
         {expanded ? (
-          <div className="flex items-center gap-2.5">
-            <AccountIdentity user={user} role={role} className="min-w-0 flex-1" />
+          <div className="ws-sidebar-foot-row">
+            <NavLink to={ACCOUNT_PATH[role]} className="ws-sidebar-action" title="Open account settings">
+              <User className="h-3.5 w-3.5" aria-hidden="true" /> Account
+            </NavLink>
             <button
               type="button"
               onClick={handleLogout}
               disabled={loggingOut}
-              className="rounded-full p-1.5 text-soft transition hover:bg-[var(--surface-sunken)] hover:text-ink"
+              className="ws-sidebar-action ws-sidebar-action--signout"
               aria-label="Sign out"
               title="Sign out"
             >
-              <LogOut className="h-3.5 w-3.5" />
+              <LogOut className="h-3.5 w-3.5" aria-hidden="true" /> Sign out
             </button>
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={() => setExpanded(true)}
-            className="rounded-full p-1.5 text-soft transition hover:bg-white hover:text-ink"
-            aria-label="Expand sidebar"
-          >
-            <PanelLeftOpen className="h-4 w-4" />
-          </button>
+          <div className="flex flex-col items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setExpanded(true)}
+              className="ws-sidebar-icon"
+              aria-label="Expand sidebar"
+              title="Expand sidebar"
+            >
+              <PanelLeftOpen className="h-4 w-4" />
+            </button>
+            <NavLink to={ACCOUNT_PATH[role]} className="ws-sidebar-icon" aria-label="Open account settings" title="Account">
+              <User className="h-4 w-4" />
+            </NavLink>
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="ws-sidebar-icon ws-sidebar-icon--signout"
+              aria-label="Sign out"
+              title="Sign out"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
         )}
       </div>
     </>
@@ -217,10 +222,11 @@ export default function WorkspaceLayout() {
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              {/* the same identity block as the desktop sidebar footer, so the
-                  role colour is visible on phones too */}
-              <div className="mx-2 mt-3 rounded-[10px] border border-[var(--sky-200)] bg-[var(--sky-50)] px-2.5 py-2">
-                <AccountIdentity user={user} role={role} size="sm" nameClassName="text-[12px] font-medium text-ink" />
+              {/* Workspace context only — the personal identity card was removed
+                  alongside the header block, and is not duplicated here. */}
+              <div className="mx-4 mt-3 flex items-center gap-1.5">
+                <RoleTag role={role} size="xs" />
+                <span className="text-[9.5px] uppercase tracking-[0.14em] text-soft">workspace</span>
               </div>
               <nav className="thin-scroll flex-1 overflow-y-auto px-2 py-3" aria-label={`${ROLE_LABELS[role]} navigation`}>
                 <ul className="space-y-0.5">
@@ -271,26 +277,12 @@ export default function WorkspaceLayout() {
                 <Menu className="h-4 w-4" />
               </button>
 
-              <div className="hidden min-w-0 items-center gap-1.5 text-[12px] text-soft sm:flex">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--sky-100)] px-2 py-[2px] text-[9.5px] font-medium uppercase tracking-[0.14em] text-[var(--sky-800)]">
-                  <span className="h-[4px] w-[4px] rounded-full bg-[var(--sky-500)]" aria-hidden="true" />
-                  {ROLE_LABELS[role]}
-                </span>
-                {active ? (
-                  <>
-                    <ChevronRight className="h-3 w-3" aria-hidden="true" />
-                    <span className="truncate font-medium text-ink">{active.label}</span>
-                  </>
-                ) : null}
-                {crumbs.length > 1 ? (
-                  <>
-                    <ChevronRight className="h-3 w-3" aria-hidden="true" />
-                    <span className="truncate capitalize text-muted">{crumbs[crumbs.length - 1].replace(/-/g, ' ')}</span>
-                  </>
-                ) : null}
-              </div>
-
-              <div className="ml-auto flex items-center gap-1.5">
+              {/* Header controls only. The workspace breadcrumb (role badge,
+                  separator and current page title) and the profile identity
+                  block were removed; account access and sign-out live in the
+                  sidebar footer and mobile drawer. No replacement element or
+                  empty spacer is rendered where the breadcrumb was. */}
+              <div className="ml-auto flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setPaletteOpen(true)}
@@ -305,19 +297,6 @@ export default function WorkspaceLayout() {
                   <Search className="h-4 w-4" />
                 </button>
                 <NotificationInbox />
-                <div className="ml-1 hidden items-center border-l border-[var(--line)] pl-2.5 sm:flex">
-                  {/* below lg the sidebar is hidden, so the header keeps the avatar
-                      and role chip but drops the name to protect the layout;
-                      from lg up it is the full name + role identity */}
-                  <AccountIdentity user={user} role={role} size="sm" showName={false} className="lg:hidden" />
-                  <AccountIdentity
-                    user={user}
-                    role={role}
-                    size="sm"
-                    nameClassName="max-w-[150px] truncate text-[11.5px] font-medium text-ink"
-                    className="hidden lg:flex"
-                  />
-                </div>
               </div>
             </div>
           </header>
