@@ -37,6 +37,7 @@ console.error = (...args) => {
 const server = await createServer({ server: { middlewareMode: true }, appType: 'custom', logLevel: 'error' })
 const load = (p) => server.ssrLoadModule(p)
 const React = (await import('react')).default
+const { StrictMode } = await import('react')
 const { createRoot } = await import('react-dom/client')
 const { MemoryRouter } = await import('react-router-dom')
 const App = (await load('/src/App.jsx')).default
@@ -76,7 +77,11 @@ async function mount(path) {
   if (root) root.unmount()
   rootEl.innerHTML = ''
   root = createRoot(rootEl)
-  root.render(React.createElement(MemoryRouter, { initialEntries: [path] }, React.createElement(App)))
+  root.render(
+    React.createElement(StrictMode, null,
+      React.createElement(MemoryRouter, { initialEntries: [path] }, React.createElement(App)),
+    ),
+  )
 }
 
 const ROUTES = Object.fromEntries(
