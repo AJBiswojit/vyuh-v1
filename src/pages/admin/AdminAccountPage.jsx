@@ -7,6 +7,7 @@ import { userService } from '../../services/user.service.js'
 import { batchService } from '../../services/batch.service.js'
 import { formatDate, relativeTime } from '../../lib/time.js'
 import { ErrorState, LoadingBlock } from '../../ui/states.jsx'
+import { AccountAvatar, RoleTag } from '../../ui/account-identity.jsx'
 import { PageHeader, StatusBadge } from '../../ui/workspace-kit.jsx'
 import { TextInput, FormError } from '../../ui/fields.jsx'
 import Button from '../../ui/Button.jsx'
@@ -75,8 +76,6 @@ export default function AdminAccountPage() {
   const batches = data.batches || []
   const activeBatches = batches.filter((batch) => batch.status === 'active')
   const totalStudents = activeBatches.reduce((sum, batch) => sum + (batch.studentIds?.length || 0), 0)
-  const initials = (profile.name || 'V').split(' ').map((part) => part[0]).slice(0, 2).join('')
-
   return (
     <div>
       <PageHeader
@@ -88,13 +87,11 @@ export default function AdminAccountPage() {
       <div className="grid gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
         <div className="space-y-4">
           <section className="surface-flat p-4 text-center">
-            <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--ink)] text-[20px] font-semibold text-white">
-              {initials}
-            </span>
+            <AccountAvatar name={profile.name} role="admin" size="xl" className="mx-auto font-semibold" />
             <h2 className="mt-2.5 text-[15px] font-medium text-ink">{profile.name}</h2>
             <p className="text-[11.5px] text-muted">{profile.email}</p>
             <div className="mt-2 flex flex-wrap justify-center gap-1.5">
-              <StatusBadge tone="sky">Institute Admin</StatusBadge>
+              <RoleTag role="admin" />
               <StatusBadge tone={profile.status === 'active' ? 'good' : 'warn'} dot>
                 {profile.status === 'active' ? 'Active' : String(profile.status || '').toUpperCase()}
               </StatusBadge>

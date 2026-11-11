@@ -13,45 +13,16 @@ import {
   ArrowUpRight,
 } from 'lucide-react'
 import { Logo, Wordmark } from '../components/Icons.jsx'
-import { NAV_ITEMS, ROLE_LABELS, ROLE_WORKSPACE, activeNavItem } from '../lib/navigation.js'
+import { NAV_ITEMS, ROLE_LABELS, activeNavItem } from '../lib/navigation.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../ui/feedback.jsx'
 import NotificationInbox from './NotificationInbox.jsx'
 import CommandPalette from './CommandPalette.jsx'
+import { AccountIdentity, RoleTag } from '../ui/account-identity.jsx'
 import ErrorBoundary from '../ui/ErrorBoundary.jsx'
 import RouteFallback from '../ui/RouteFallback.jsx'
 
 const COLLAPSE_KEY = 'vyuh:sidebar-collapsed'
-
-function initials(name = '') {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('')
-}
-
-function Avatar({ name, tone = 'sky', size = 'md' }) {
-  const toneClass =
-    tone === 'cream'
-      ? 'bg-[var(--cream-200)] text-[#6b5c33]'
-      : tone === 'charcoal'
-        ? 'bg-[var(--ink)] text-white'
-        : 'bg-[var(--sky-300)] text-[#245268]'
-  return (
-    <span
-      className={`inline-flex shrink-0 items-center justify-center rounded-full font-medium ${toneClass} ${
-        size === 'lg' ? 'h-12 w-12 text-[15px]' : size === 'sm' ? 'h-7 w-7 text-[10px]' : 'h-9 w-9 text-[12px]'
-      }`}
-      aria-hidden="true"
-    >
-      {initials(name)}
-    </span>
-  )
-}
-
-export { Avatar }
 
 export default function WorkspaceLayout() {
   const { role, user, logout } = useAuth()
@@ -143,7 +114,10 @@ export default function WorkspaceLayout() {
       </div>
 
       {expanded ? (
-        <p className="px-4 pb-2 text-[10px] uppercase tracking-[0.16em] text-soft">{ROLE_WORKSPACE[role]}</p>
+        <div className="flex items-center gap-1.5 px-4 pb-2">
+          <RoleTag role={role} size="xs" />
+          <span className="truncate text-[9.5px] uppercase tracking-[0.14em] text-soft">workspace</span>
+        </div>
       ) : null}
 
       <nav aria-label={`${ROLE_LABELS[role]} navigation`} className="thin-scroll flex-1 overflow-y-auto px-2 pb-4">
@@ -190,11 +164,7 @@ export default function WorkspaceLayout() {
       <div className={`border-t border-[var(--line)] p-2.5 ${expanded ? '' : 'flex justify-center'}`}>
         {expanded ? (
           <div className="flex items-center gap-2.5">
-            <Avatar name={user?.name} tone={user?.avatarTone} />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[12px] font-medium text-ink">{user?.name}</p>
-              <p className="truncate text-[10.5px] text-soft">{ROLE_LABELS[role]}</p>
-            </div>
+            <AccountIdentity user={user} role={role} className="min-w-0 flex-1" />
             <button
               type="button"
               onClick={handleLogout}
@@ -246,6 +216,11 @@ export default function WorkspaceLayout() {
                 <button type="button" className="icon-btn" onClick={() => setMobileOpen(false)} aria-label="Close navigation">
                   <X className="h-4 w-4" />
                 </button>
+              </div>
+              {/* the same identity block as the desktop sidebar footer, so the
+                  role colour is visible on phones too */}
+              <div className="mx-2 mt-3 rounded-[10px] border border-[var(--line)] bg-white px-2.5 py-2">
+                <AccountIdentity user={user} role={role} size="sm" nameClassName="text-[12px] font-medium text-ink" />
               </div>
               <nav className="thin-scroll flex-1 overflow-y-auto px-2 py-3" aria-label={`${ROLE_LABELS[role]} navigation`}>
                 <ul className="space-y-0.5">
@@ -327,12 +302,18 @@ export default function WorkspaceLayout() {
                   <Search className="h-4 w-4" />
                 </button>
                 <NotificationInbox />
-                <div className="ml-1 hidden items-center gap-2 border-l border-[var(--line)] pl-2.5 sm:flex">
-                  <Avatar name={user?.name} tone={user?.avatarTone} size="sm" />
-                  <div className="hidden min-w-0 leading-tight lg:block">
-                    <p className="max-w-[150px] truncate text-[11.5px] font-medium text-ink">{user?.name}</p>
-                    <p className="text-[10px] text-soft">{ROLE_LABELS[role]}</p>
-                  </div>
+                <div className="ml-1 hidden items-center border-l border-[var(--line)] pl-2.5 sm:flex">
+                  {/* below lg the sidebar is hidden, so the header keeps the avatar
+                      and role chip but drops the name to protect the layout;
+                      from lg up it is the full name + role identity */}
+                  <AccountIdentity user={user} role={role} size="sm" showName={false} className="lg:hidden" />
+                  <AccountIdentity
+                    user={user}
+                    role={role}
+                    size="sm"
+                    nameClassName="max-w-[150px] truncate text-[11.5px] font-medium text-ink"
+                    className="hidden lg:flex"
+                  />
                 </div>
               </div>
             </div>
