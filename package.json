@@ -23,7 +23,8 @@
     "audit:deployment": "node tools/audit-deployment.mjs",
     "audit:visual": "node tools/audit-visual-system.mjs",
     "audit:css": "node tools/audit-css-coverage.mjs",
-    "audit:identity": "node tools/audit-identity.mjs"
+    "audit:identity": "node tools/audit-identity.mjs",
+    "audit:student-exams": "node tools/audit-student-exams.mjs"
   },
   "dependencies": {
     "framer-motion": "^14.12.0",

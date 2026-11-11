@@ -74,6 +74,32 @@ function examWindowState(exam) {
   return 'window-closed'
 }
 
+/* The listing state is deliberately separate from the eligibility state above.
+   `examWindowState` reports a faculty-concluded paper as "completed"; that is
+   correct for *starting* an exam, but an unattempted concluded paper previously
+   matched none of the student tabs. For the archive, "completed" is a schedule
+   state that always counts as concluded, so the paper lands in Past/Missed. */
+function examScheduleState(exam) {
+  if (exam.status === 'cancelled') return 'cancelled'
+  if (exam.status === 'draft') return 'draft'
+  if (exam.status === 'completed') return 'completed'
+  const now = Date.now()
+  const start = new Date(exam.startAt).getTime()
+  const end = new Date(exam.endAt).getTime()
+  if (now < start) return 'upcoming'
+  if (now <= end) return 'live-window'
+  return 'window-closed'
+}
+
+/* Whether the student submitted anything is participation, never schedule.
+   A closed window without an attempt is "not-attempted", not "completed". */
+function examParticipationState(attempt) {
+  if (!attempt) return 'not-attempted'
+  if (attempt.status === 'in-progress') return 'in-progress'
+  if (attempt.status === 'expired') return 'auto-submitted'
+  return 'submitted'
+}
+
 export const examService = {
   async listExams({ status, batchId, subjectId, createdBy, search } = {}) {
     return request(() => {
@@ -98,7 +124,11 @@ export const examService = {
     })
   },
 
-  /** Student-visible examinations, restricted to the student's batches. */
+  /** Student-visible examinations, restricted to the student's batches.
+   *  The original buckets (upcoming / inProgress / completed / missed /
+   *  cancelled) keep their meaning for every existing consumer. `past` is an
+   *  additive archive bucket: every concluded paper, attempted or not, so the
+   *  Past examinations tab can show participation without inventing results. */
   async getStudentExams(studentId) {
     return request(() => {
       const batchIds = studentBatchIds(studentId)
@@ -115,6 +145,8 @@ export const examService = {
         return {
           ...decorateExam(exam),
           windowState: examWindowState(exam),
+          scheduleState: examScheduleState(exam),
+          participationState: examParticipationState(attempt),
           attempt: attempt
             ? {
                 id: attempt.id,
@@ -126,14 +158,35 @@ export const examService = {
         }
       })
 
+      const startValue = (exam) => new Date(exam.startAt).getTime()
+      const chronological = sortBy(decorated, startValue, 'asc')
+      const recentFirst = sortBy(decorated, startValue, 'desc')
+      const scheduleEnded = (exam) => ['window-closed', 'completed'].includes(exam.scheduleState)
+      const submitted = (exam) => ['submitted', 'auto-submitted'].includes(exam.participationState)
+
       return {
-        upcoming: decorated.filter((exam) => ['upcoming', 'live-window'].includes(exam.windowState) && !exam.attempt),
-        inProgress: decorated.filter((exam) => exam.attempt?.status === 'in-progress'),
-        completed: decorated.filter((exam) => exam.attempt && exam.attempt.status !== 'in-progress'),
-        missed: decorated.filter(
-          (exam) => exam.windowState === 'window-closed' && !exam.attempt,
+        /* Soonest first: the next paper is always at the top of Upcoming. */
+        upcoming: chronological.filter(
+          (exam) =>
+            ['upcoming', 'live-window'].includes(exam.scheduleState) &&
+            exam.status !== 'completed' &&
+            exam.participationState === 'not-attempted',
         ),
-        cancelled: decorated.filter((exam) => exam.windowState === 'cancelled'),
+        inProgress: recentFirst.filter((exam) => exam.participationState === 'in-progress'),
+        /* Unchanged contract: papers with a submitted attempt. Result and
+           analysis pages resolve their attempt through this bucket. */
+        completed: recentFirst.filter(submitted),
+        /* Full archive for the Past examinations tab: closed windows (including
+           faculty-concluded papers) and papers already submitted. Cancelled
+           papers belong to the Cancelled tab instead. */
+        past: recentFirst.filter(
+          (exam) => exam.scheduleState !== 'cancelled' && (scheduleEnded(exam) || submitted(exam)),
+        ),
+        /* A missed paper is a concluded window with no attempt on record. This
+           now includes faculty-concluded examinations, which were previously
+           absent from every tab. */
+        missed: recentFirst.filter((exam) => scheduleEnded(exam) && exam.participationState === 'not-attempted'),
+        cancelled: recentFirst.filter((exam) => exam.scheduleState === 'cancelled'),
       }
     })
   },
