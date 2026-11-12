@@ -1,8 +1,10 @@
 /* Single source of truth for workspace navigation.
    Labels are identical everywhere in the product (sidebar, mobile nav and
-   command palette) and the counts match the specification exactly:
-   Student 9 · Faculty 10 · Institute Admin 11. The shared header carries no
-   breadcrumb; `activeNavItem` resolves the highlighted sidebar entry only. */
+   command palette). Current section counts: Student 10 · Faculty 10 ·
+   Institute Admin 13. The original entries are preserved; `Payment & Dues`,
+   `Support Desk` and `Payments & Dues` were added for the shared fee and
+   support workflows. The shared header carries no breadcrumb; `activeNavItem`
+   resolves the highlighted sidebar entry only. */
 
 import {
   LayoutDashboard,
@@ -26,6 +28,7 @@ import {
   ScrollText,
   Settings,
   MonitorPlay,
+  Wallet,
 } from 'lucide-react'
 
 export const ROLE_LABELS = {
@@ -49,6 +52,7 @@ export const NAV_ITEMS = {
     { label: 'Performance', to: '/student/performance', icon: TrendingUp },
     { label: 'Doubts', to: '/student/doubts', icon: MessageSquare },
     { label: 'Attendance', to: '/student/attendance', icon: CalendarCheck },
+    { label: 'Payment & Dues', to: '/student/payment-dues', icon: Wallet },
     { label: 'Profile', to: '/student/profile', icon: User },
     { label: 'Support', to: '/student/support', icon: LifeBuoy },
   ],
@@ -72,6 +76,8 @@ export const NAV_ITEMS = {
     { label: 'Policies', to: '/admin/policies', icon: Settings },
     { label: 'Integrity', to: '/admin/integrity', icon: Shield },
     { label: 'Reports', to: '/admin/reports', icon: FileBarChart },
+    { label: 'Support Desk', to: '/admin/support', icon: LifeBuoy },
+    { label: 'Payments & Dues', to: '/admin/payments', icon: Wallet },
     { label: 'Moderation', to: '/admin/moderation', icon: Flag },
     { label: 'Audit Log', to: '/admin/audit-log', icon: ScrollText },
     { label: 'Settings', to: '/admin/settings', icon: Settings },

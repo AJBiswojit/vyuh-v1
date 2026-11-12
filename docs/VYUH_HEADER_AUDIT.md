@@ -17,9 +17,9 @@ sidebar navigation remain in their own surfaces.
   `useMemo` crumb derivation, `ChevronRight` import and the entire breadcrumb
   container were removed. `activeNavItem` remains solely to highlight the
   sidebar entry.
-- Scanned `132` JS/JSX files and found
-  `6` `<header>` blocks across `5`
-  files: `src/components/NavBar.jsx`, `src/layouts/WorkspaceLayout.jsx`, `src/pages/faculty/FacultyClassStudioPage.jsx`, `src/pages/student/ExamLivePage.jsx`, `src/pages/student/StudentClassroomPage.jsx`.
+- Scanned `144` JS/JSX files and found
+  `9` `<header>` blocks across `7`
+  files: `src/components/NavBar.jsx`, `src/layouts/WorkspaceLayout.jsx`, `src/pages/admin/SupportDeskPage.jsx`, `src/pages/faculty/FacultyClassStudioPage.jsx`, `src/pages/shared/SupportWorkspace.jsx`, `src/pages/student/ExamLivePage.jsx`, `src/pages/student/StudentClassroomPage.jsx`.
 - Forbidden breadcrumb patterns inside any header block: **0**.
 - Remaining `ChevronRight` references outside header blocks:
   `src/components/Icons.jsx`, `src/components/Testimonials.jsx`
@@ -34,16 +34,16 @@ sidebar navigation remain in their own surfaces.
 
 | Role | Route | Header text | Page `h1` | Header children | Sidebar links | Breadcrumb signals | Status |
 | --- | --- | --- | --- | ---: | ---: | --- | --- |
-| student | `/student/dashboard` | `Search⌘K3` | `Dashboard` | 2 | 9 | none | PASS |
-| student | `/student/exams` | `Search⌘K3` | `Exams` | 2 | 9 | none | PASS |
-| student | `/student/doubts` | `Search⌘K3` | `Doubts` | 2 | 9 | none | PASS |
-| student | `/student/exams/exam_full_001/instructions` | `Search⌘K3` | `JEE Advanced Full Mock 12` | 2 | 9 | none | PASS |
-| faculty | `/faculty/dashboard` | `Search⌘K1` | `Good morning, Aarav` | 2 | 10 | none | PASS |
+| student | `/student/dashboard` | `Search⌘K3` | `Dashboard` | 2 | 10 | none | PASS |
+| student | `/student/exams` | `Search⌘K3` | `Exams` | 2 | 10 | none | PASS |
+| student | `/student/doubts` | `Search⌘K3` | `Doubts` | 2 | 10 | none | PASS |
+| student | `/student/exams/exam_full_001/instructions` | `Search⌘K3` | `JEE Advanced Full Mock 12` | 2 | 10 | none | PASS |
+| faculty | `/faculty/dashboard` | `Search⌘K1` | `Good afternoon, Aarav` | 2 | 10 | none | PASS |
 | faculty | `/faculty/question-bank` | `Search⌘K1` | `Question Bank` | 2 | 10 | none | PASS |
 | faculty | `/faculty/exams` | `Search⌘K1` | `Examinations` | 2 | 10 | none | PASS |
-| admin | `/admin/overview` | `Search⌘K3` | `Overview` | 2 | 11 | none | PASS |
-| admin | `/admin/users` | `Search⌘K3` | `Users` | 2 | 11 | none | PASS |
-| admin | `/admin/account` | `Search⌘K3` | `Account` | 2 | 11 | none | PASS |
+| admin | `/admin/overview` | `Search⌘K3` | `Overview` | 2 | 13 | none | PASS |
+| admin | `/admin/users` | `Search⌘K3` | `Users` | 2 | 13 | none | PASS |
+| admin | `/admin/account` | `Search⌘K3` | `Account` | 2 | 13 | none | PASS |
 
 Header children are the hamburger button and the single `ml-auto` controls
 group. Header text is limited to the visible Search button, its shortcut and

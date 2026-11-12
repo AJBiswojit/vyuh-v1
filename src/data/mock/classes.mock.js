@@ -154,6 +154,29 @@ export const CLASSES = [
     resourceName: 'Pedigree problem set (PDF)',
     polls: [],
   },
+  /* Same authored teaching day as class_002, but a separate eligible session.
+     It demonstrates multiple same-day classes with independent check-in and
+     check-out events in the Student Attendance date view. */
+  {
+    id: 'class_010',
+    sessionId: 'sess_010',
+    title: 'Electrochemistry — Numerical Practice',
+    description: 'Nernst equation, conductance and cell-potential numericals with a short timed worksheet.',
+    batchId: 'batch_001',
+    subjectId: 'sub_chem',
+    facultyId: 'fac_002',
+    scheduledStartAt: '2026-11-10T11:30:00.000Z',
+    scheduledEndAt: '2026-11-10T13:00:00.000Z',
+    durationMinutes: 90,
+    status: 'ended',
+    sessionStartedAt: '2026-11-10T11:31:00.000Z',
+    sessionEndedAt: '2026-11-10T13:01:00.000Z',
+    lateJoinAllowed: true,
+    recordingEnabled: false,
+    recordingId: null,
+    resourceName: 'Electrochemistry numericals (PDF)',
+    polls: [],
+  },
   {
     id: 'class_008',
     sessionId: 'sess_008',

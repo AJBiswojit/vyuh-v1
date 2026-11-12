@@ -2,6 +2,13 @@
 
 Date: 11 November 2026 · Branch: `arena/02e3e69d-vyuh-v1`
 
+> **Historical baseline.** The verification table in this document describes the
+> 30-page shell before the 12 November 2026 workspace enhancements. The shared
+> shell behaviour is unchanged, but the current app has 33 sections: 10 Student,
+> 10 Faculty and 13 Admin. Current results are recorded in
+> `docs/VYUH_ENHANCEMENTS_AUDIT.md`; `docs/VYUH_HEADER_AUDIT.md` is regenerated
+> by `npm run audit:header` with the current navigation counts.
+
 ## Scope
 
 All changes are applied once in the shared `WorkspaceLayout`,

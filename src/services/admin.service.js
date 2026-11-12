@@ -14,6 +14,7 @@ import {
 } from './repository.js'
 import { evaluateAttempt } from '../lib/exam-calculations.js'
 import { computeAttendance } from '../lib/attendance-calculations.js'
+import { deriveFeeRows, derivePaymentRows, summariseFees, formatCurrency } from '../lib/fee-calculations.js'
 import { monthKey } from '../lib/time.js'
 
 function flattenPolicies(policies) {
@@ -62,6 +63,9 @@ export const adminService = {
         const recentAudit = sortBy(store.audit, (event) => event.at, 'desc').slice(0, 8)
         const pendingApprovals = store.approvals.filter((approval) => approval.status === 'pending')
         const unresolvedIntegrity = (store.integrity || []).filter((event) => !event.resolved)
+        const feeRows = deriveFeeRows(store, new Date())
+        const paymentRows = derivePaymentRows(store)
+        const feeSummary = summariseFees(feeRows, paymentRows, new Date())
 
         return {
           counts: {
@@ -75,9 +79,14 @@ export const adminService = {
             classesToday: todaysClasses.length,
             liveClasses: store.classes.filter((klass) => klass.status === 'live').length,
             pendingApprovals: pendingApprovals.length,
+            pendingSupportTickets: store.supportTickets.filter((ticket) => !['resolved', 'closed'].includes(ticket.status)).length,
             openTickets: store.supportTickets.filter((ticket) => !['resolved', 'closed'].includes(ticket.status)).length,
             unresolvedIntegrity: unresolvedIntegrity.length,
             flaggedRecordings: store.recordings.filter((recording) => recording.moderationState === 'flagged').length,
+            outstandingDues: feeSummary.totalOutstanding,
+            overdueFees: feeSummary.overdueCount,
+            pendingFeeRequests: (store.feeRequests || []).filter((request) => request.status === 'pending').length,
+            collectedFees: feeSummary.totalPaid,
           },
           attendance: {
             percentage: eligible ? round((attended / eligible) * 100, 1) : 0,
@@ -974,6 +983,44 @@ export const adminService = {
                 { key: 'resolved', label: 'Resolved', align: 'right' },
                 { key: 'open', label: 'Open', align: 'right' },
                 { key: 'medianResponseHours', label: 'Median response (hrs)', align: 'right' },
+              ],
+              rows,
+            }
+          }
+          case 'report_fee_dues': {
+            const feeRows = deriveFeeRows(store, new Date()).filter(
+              (fee) => !filters?.batchId || filters.batchId === 'all' || fee.batchId === filters.batchId,
+            )
+            const rows = feeRows.map((fee) => ({
+              id: fee.id,
+              code: fee.code,
+              studentName: fee.studentName,
+              enrollmentId: fee.enrollmentId,
+              batchName: fee.batchName,
+              category: fee.categoryLabel,
+              title: fee.title,
+              billed: formatCurrency(fee.amount, fee.currency),
+              paid: formatCurrency(fee.paidAmount, fee.currency),
+              outstanding: formatCurrency(fee.outstandingAmount, fee.currency),
+              dueDate: String(fee.dueDate).slice(0, 10),
+              status: fee.paymentStatus,
+              paymentReference: fee.paymentReference || '—',
+              approvalStatus: fee.approvalStatus,
+            }))
+            return {
+              columns: [
+                { key: 'code', label: 'Fee ID' },
+                { key: 'studentName', label: 'Student' },
+                { key: 'batchName', label: 'Batch' },
+                { key: 'category', label: 'Category' },
+                { key: 'title', label: 'Charge' },
+                { key: 'billed', label: 'Billed', align: 'right' },
+                { key: 'paid', label: 'Paid', align: 'right' },
+                { key: 'outstanding', label: 'Outstanding', align: 'right' },
+                { key: 'dueDate', label: 'Due date' },
+                { key: 'status', label: 'Status' },
+                { key: 'paymentReference', label: 'Payment reference' },
+                { key: 'approvalStatus', label: 'Record' },
               ],
               rows,
             }

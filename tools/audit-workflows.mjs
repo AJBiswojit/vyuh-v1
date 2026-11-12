@@ -43,6 +43,12 @@ const { attendanceService } = await load('/src/services/attendance.service.js')
 const { liveClassService } = await load('/src/services/live-class.service.js')
 const { doubtService } = await load('/src/services/doubt.service.js')
 const { analysisService } = await load('/src/services/analysis.service.js')
+const { feeService } = await load('/src/services/fee.service.js')
+const { feeRequestService } = await load('/src/services/fee-request.service.js')
+const { paymentService } = await load('/src/services/payment.service.js')
+const { supportService } = await load('/src/services/support.service.js')
+const { supportAiService } = await load('/src/services/support-ai.service.js')
+const { performanceService } = await load('/src/services/performance.service.js')
 const mockStorage = await load('/src/data/mock/mock-storage.js')
 
 const EMAIL = {
@@ -318,6 +324,195 @@ let scheduledClassId = null
   const adminOverview = await adminService.getOverview()
   step(wf, 'admin overview attendance aggregates load', adminOverview.attendance?.percentage !== undefined, `percent=${adminOverview.attendance?.percentage}`)
   await authService.logout()
+}
+
+/* ─────────────── 9. fees → simulated payments → receipt → request decision ─────────────── */
+{
+  const wf = 'fees, simulated payments and cross-role requests'
+  await authService.logout()
+  await as('student')
+  const before = await feeService.getStudentFees(ACTOR.student.id)
+  const payable = before.fees.find((fee) => fee.outstandingAmount > 0)
+  step(wf, 'approved fee records expose derived outstanding balances', Boolean(payable), `fee=${payable?.code}`)
+  const failure = await paymentService.simulatePayment(payable.id, { method: 'upi', outcome: 'failure' }, ACTOR.student)
+  const afterFailure = await feeService.getStudentFees(ACTOR.student.id)
+  const feeAfterFailure = afterFailure.fees.find((fee) => fee.id === payable.id)
+  step(wf, 'failed simulation is recorded but does not reduce balance',
+    !failure.ok && feeAfterFailure.outstandingAmount === payable.outstandingAmount && feeAfterFailure.failedPayments > 0,
+    `status=${failure.status} outstanding=${feeAfterFailure.outstandingAmount}`)
+  const success = await paymentService.simulatePayment(payable.id, { method: 'upi', outcome: 'success' }, ACTOR.student)
+  const afterSuccess = await feeService.getStudentFees(ACTOR.student.id)
+  const paidFee = afterSuccess.fees.find((fee) => fee.id === payable.id)
+  step(wf, 'successful simulation clears the derived balance with stable references',
+    success.ok && paidFee.outstandingAmount === 0 && Boolean(success.transactionId && success.receiptReference),
+    `transaction=${success.transactionId} receipt=${success.receiptReference}`)
+  const receipt = await feeService.getReceiptData(success.payment.id)
+  step(wf, 'student receipt is grounded in fee, payment and institute records',
+    receipt.payment.id === success.payment.id && receipt.fee.id === payable.id && Boolean(receipt.institute?.name),
+    `student=${receipt.student?.name}`)
+  step(wf, 'receipt explicitly avoids real gateway and financial credentials',
+    /no real gateway/i.test(receipt.payment.gatewayLabel || '') && !/card|cvv|pin|password/i.test(JSON.stringify(receipt.payment)),
+    receipt.payment.gatewayLabel)
+
+  const extensionFee = afterSuccess.fees.find((fee) => fee.outstandingAmount > 0 && !fee.overdue)
+  const proposed = new Date(new Date(extensionFee.dueDate).getTime() + 21 * 86400000).toISOString()
+  const request = await feeRequestService.createRequest({
+    type: 'extension',
+    feeId: extensionFee.id,
+    subject: 'Workflow request for a later deadline',
+    description: 'Please review a later deadline while the unit-test week is running. This is a workflow audit request.',
+    proposedDueDate: proposed,
+  }, ACTOR.student)
+  step(wf, 'student raises an extension request against a fee ID', request.status === 'pending' && request.type === 'extension', `request=${request.code || request.id}`)
+
+  await authService.logout()
+  await as('admin')
+  const adminFees = await feeService.getAdminFees()
+  const adminRequest = adminFees.requests.find((item) => item.id === request.id)
+  step(wf, 'admin sees the same pending fee request', Boolean(adminRequest), `pending=${adminFees.pendingRequests.length}`)
+  const decision = await feeRequestService.reviewRequest(request.id, 'approved', 'Approved by the cross-role workflow audit.', ACTOR.admin)
+  step(wf, 'admin approval updates the shared request and due date',
+    decision.request.status === 'approved' && decision.fee.dueDate === proposed,
+    `status=${decision.request.status} due=${decision.fee.dueDate}`)
+  const offlineFee = adminFees.fees.find((fee) => fee.outstandingAmount > 0 && fee.id !== extensionFee.id)
+  const offline = await paymentService.recordOfflinePayment(offlineFee.id, {
+    amount: Math.min(1000, offlineFee.outstandingAmount),
+    method: 'cash',
+    referenceNote: 'Workflow office receipt book entry',
+    paidAt: new Date().toISOString().slice(0, 10),
+  }, ACTOR.admin)
+  step(wf, 'admin offline payment creates a successful local record',
+    offline.status === 'success' && Boolean(offline.receiptReference),
+    `transaction=${offline.transactionId}`)
+  const duesReport = await adminService.getReportData('report_fee_dues', { batchId: 'all' })
+  step(wf, 'Fees & Dues report returns derived rows', (duesReport?.rows || []).length > 0, `rows=${duesReport?.rows?.length}`)
+  const overview = await adminService.getOverview()
+  step(wf, 'admin overview includes fee and support counters',
+    overview.counts?.outstandingDues !== undefined && overview.counts?.pendingSupportTickets !== undefined,
+    JSON.stringify({ dues: overview.counts?.outstandingDues, support: overview.counts?.pendingSupportTickets }))
+
+  await authService.logout()
+  await as('student')
+  const finalStudent = await feeService.getStudentFees(ACTOR.student.id)
+  const finalRequest = finalStudent.requests.find((item) => item.id === request.id)
+  const finalFee = finalStudent.fees.find((fee) => fee.id === extensionFee.id)
+  step(wf, 'student sees the admin decision on the same request and fee',
+    finalRequest?.status === 'approved' && finalFee?.dueDate === proposed,
+    `status=${finalRequest?.status} due=${finalFee?.dueDate}`)
+}
+
+/* ─────────────── 10. mock AI support → admin ticket → reply/reopen ─────────────── */
+{
+  const wf = 'AI Auto Support escalation and shared ticket lifecycle'
+  await authService.logout()
+  await as('student')
+  const initial = await supportAiService.listConversations(ACTOR.student.id)
+  const existingConversation = initial.conversations[0] || await supportAiService.createConversation(ACTOR.student.id, 'Workflow Auto Support conversation')
+  const sent = await supportAiService.sendMessage(existingConversation.id, 'How do I contact Admin Support?', ACTOR.student)
+  const assistant = sent.assistantMessage
+  step(wf, 'mock provider is explicitly labelled as deterministic, not a live AI model',
+    /deterministic templates, not a live AI model/i.test(assistant.sourceLabel || '') && assistant.text.length > 40,
+    assistant.sourceLabel)
+  const escalation = await supportAiService.escalateToAdmin(existingConversation.id, ACTOR.student, { reason: 'Workflow escalation for admin review.' })
+  const ticket = escalation.ticket
+  step(wf, 'escalation creates a real ticket sharing the conversation ID',
+    ticket.source === 'ai-escalation' && ticket.context?.conversationId === existingConversation.id && escalation.conversation.escalatedTicketId === ticket.id,
+    `ticket=${ticket.code || ticket.id}`)
+  await authService.logout()
+  await as('admin')
+  const allTickets = await supportService.listAll({ search: ticket.code })
+  step(wf, 'admin support desk sees the escalated ticket', allTickets.tickets.some((item) => item.id === ticket.id), `matches=${allTickets.tickets.length}`)
+  const waiting = await supportService.reply(ticket.id, 'Please share the exact page and expected result.', ACTOR.admin, { status: 'waiting-for-student' })
+  step(wf, 'admin response changes shared ticket status to Waiting for Student', waiting.status === 'waiting-for-student' && waiting.replyCount > 0, `status=${waiting.status}`)
+  await authService.logout()
+  await as('student')
+  const studentTickets = await supportService.listForUser(ACTOR.student.id)
+  const studentTicket = studentTickets.tickets.find((item) => item.id === ticket.id)
+  step(wf, 'student sees the admin reply and status', studentTicket?.status === 'waiting-for-student' && studentTicket.activity.some((event) => /Please share/.test(event.message)), `status=${studentTicket?.status}`)
+  await supportService.reply(ticket.id, 'The issue is on the Payment & Dues page after opening a fee record.', ACTOR.student)
+  await authService.logout()
+  await as('admin')
+  const resolved = await supportService.setStatus(ticket.id, 'resolved', ACTOR.admin, 'Resolved after workflow review.')
+  step(wf, 'admin can resolve the ticket with an auditable status event', resolved.status === 'resolved' && resolved.activity.some((event) => event.kind === 'status'), `status=${resolved.status}`)
+  await authService.logout()
+  await as('student')
+  const reopened = await supportService.reopenTicket(ticket.id, 'The issue still occurs after following the suggested steps.', ACTOR.student)
+  step(wf, 'student reopens a resolved ticket with a reason', reopened.status === 'open' && reopened.activity.some((event) => event.kind === 'reopened'), `status=${reopened.status}`)
+  const withAttachment = await supportService.createTicket({
+    category: 'Application',
+    subject: 'Workflow attachment metadata ticket',
+    description: 'This ticket checks that attachment metadata is preserved without uploading file contents in the demo.',
+    priority: 'normal',
+    attachments: [{ name: 'workflow-note.txt', type: 'text/plain', size: 128 }],
+  }, ACTOR.student)
+  step(wf, 'student ticket preserves optional attachment metadata',
+    withAttachment.attachments?.[0]?.name === 'workflow-note.txt' && /metadata only/i.test(withAttachment.attachments?.[0]?.note || ''),
+    `attachments=${withAttachment.attachments?.length}`)
+
+  await authService.logout()
+  await as('faculty')
+  const facultyChat = await supportAiService.listConversations(ACTOR.faculty.id)
+  const facultyConversation = facultyChat.conversations[0] || await supportAiService.createConversation(ACTOR.faculty.id, 'Faculty workflow support conversation')
+  const facultySent = await supportAiService.sendMessage(facultyConversation.id, 'How do I publish an examination?', ACTOR.faculty)
+  step(wf, 'faculty receives distinct deterministic mock teaching guidance',
+    /published papers are locked/i.test(facultySent.assistantMessage.text) && /not a live AI model/i.test(facultySent.assistantMessage.sourceLabel || ''),
+    `topic=${facultySent.assistantMessage.topic}`)
+  step(wf, 'faculty suggestions are teaching/operations prompts',
+    facultyChat.suggestions.some((item) => item.id === 'fq_exam'),
+    `suggestions=${facultyChat.suggestions.length}`)
+}
+
+/* ─────────────── 11. attendance date view uses eligible sessions only ─────────────── */
+{
+  const wf = 'attendance date view and timing signals'
+  await authService.logout()
+  await as('student')
+  const attendance = await attendanceService.getStudentAttendance(ACTOR.student.id)
+  const dayView = attendance.dayView
+  const multiDay = dayView.days.find((day) => day.classCount > 1)
+  step(wf, 'day view groups multiple eligible classes on one date', Boolean(multiDay) && multiDay.sessions.length > 1,
+    `days=${dayView.days.length} latest=${dayView.latestDateKey} multi=${multiDay?.key}`)
+  step(wf, 'each class on a multi-class day has check-in, check-out and precise duration',
+    Boolean(multiDay) && multiDay.sessions.every((session) => session.firstInLabel && session.lastOutLabel && session.eligibleDuration > 0),
+    multiDay?.sessions.map((session) => `${session.firstInLabel}-${session.lastOutLabel}`).join(', '))
+  step(wf, 'day percentage is eligible attended minutes over eligible minutes',
+    Boolean(multiDay) && multiDay.percentage === Math.round((multiDay.attendedMinutes / multiDay.eligibleMinutes) * 1000) / 10,
+    `${multiDay?.attendedMinutes}/${multiDay?.eligibleMinutes}=${multiDay?.percentage}%`)
+  const pending = Object.values(dayView.nonEligibleByDate || {}).flat()
+  step(wf, 'live/scheduled sessions are separated and never given a fabricated percentage',
+    pending.every((session) => !session.isEligible && Number(session.percentage || 0) === 0),
+    `pending=${pending.length}`)
+  step(wf, 'late/early/threshold warnings are derived from eligible sessions',
+    attendance.timingWarnings.every((warning) => warning.reasons.length > 0) && dayView.monthly.every((month) => month.label),
+    `warnings=${attendance.timingWarnings.length} months=${dayView.monthly.length}`)
+}
+
+/* ─────────────── 12. performance hierarchy and dedicated exam analysis ─────────────── */
+{
+  const wf = 'performance hierarchy and exam analysis'
+  await authService.logout()
+  await as('student')
+  const performance = await performanceService.getStudentPerformance(ACTOR.student.id)
+  step(wf, 'academic summary is derived from graded attempts',
+    performance.overview.summary.attempts > 0 && performance.academic.points.length === performance.overview.summary.attempts,
+    `attempts=${performance.overview.summary.attempts}`)
+  step(wf, 'recent comparison compares the latest two attempts',
+    Boolean(performance.overview.comparison?.latest?.attemptId && performance.overview.comparison?.previous?.attemptId),
+    `${performance.overview.comparison?.latest?.percentage} vs ${performance.overview.comparison?.previous?.percentage}`)
+  step(wf, 'subject momentum and topic groups are separated from participation',
+    performance.overview.subjectMomentum.length > 0 && performance.overview.topicGroups.weak.length >= 0 && Boolean(performance.participation.attendance),
+    `subjects=${performance.overview.subjectMomentum.length} participation=${performance.participation.attendance.percentage}%`)
+  step(wf, 'no composite academic score mixes attendance into marks',
+    !('overallScore' in performance.overview.summary) && performance.notes.participationNote.length > 0,
+    Object.keys(performance.overview.summary).join(','))
+  const attemptId = performance.academic.points[0].attemptId
+  const detailed = await analysisService.getDetailedAnalysis(attemptId)
+  step(wf, 'dedicated examination analysis exposes graded level A-D records',
+    Boolean(detailed.levelA && detailed.levelB.length && detailed.levelC && detailed.levelD.length && detailed.extras.recommendations),
+    `attempt=${attemptId} questions=${detailed.levelA.questions}`)
+  step(wf, 'question-level analysis remains linked to a real exam attempt',
+    Boolean(detailed.exam?.id && detailed.attempt?.id === attemptId),
+    `exam=${detailed.exam?.id}`)
 }
 
 /* ─────────────── 8. session integrity across the whole run ─────────────── */

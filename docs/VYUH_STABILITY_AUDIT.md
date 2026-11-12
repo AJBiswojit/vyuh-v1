@@ -6,6 +6,11 @@ This document records what was actually broken, what was changed, and the checks
 that were run afterwards. It is a record of evidence, not a claim of perfection:
 the "remaining limits" section at the end lists what the audit cannot prove.
 
+> **Historical baseline.** The 30-page / 9 + 10 + 11 section counts in this report
+> describe the app before the four workspace enhancements of 12 November 2026. The
+> current navigation has **10 Student + 10 Faculty + 13 Admin = 33 sections**.
+> See `docs/VYUH_ENHANCEMENTS_AUDIT.md` for the current verification results.
+
 ---
 
 ## 1. Root causes of the blank pages
@@ -184,3 +189,33 @@ responsive       all sections reachable on mobile
   user-visible gain.
 - **Fonts.** OGG and GILROY are not available; Zodiak + Instrument Serif (display)
   and Switzer + Plus Jakarta Sans (UI) are used as the documented substitution.
+
+---
+
+## 7. Current navigation baseline (12 November 2026)
+
+The four workspace enhancements added Student `Payment & Dues`, Admin
+`Support Desk` and Admin `Payments & Dues` to the shared navigation. Current
+counts are **10 Student + 10 Faculty + 13 Admin = 33 sections**. The historical
+30-page figures in section 5 are retained as a record of the earlier run.
+
+Fresh checks against the enhanced tree:
+
+```
+check-imports    ok: 144 files
+oxlint src       0 errors, 34 advisory warnings
+npm run lint     0 errors, 52 advisory warnings across all files
+vite build       success, CSS 97.10 kB
+routes            ALL CLEAR for student, faculty and admin
+sections         10 student + 10 faculty + 13 admin — CLEAN
+interactions     ALL CLEAR for all three roles
+workflows        12/12 workflows pass, including 4 new enhancement workflows
+error states     33/33 pages show a recoverable error with retry
+re-render        no refetch loops on any of the 33 pages
+paint            average 300 ms across 33 pages
+responsive       18 student / 17 faculty / 19 admin mobile links — PASS
+session          SESSION AUDIT CLEAN
+```
+
+The complete enhancement report and the schema/data dictionary are in
+`docs/VYUH_ENHANCEMENTS_AUDIT.md` and `docs/VYUH_DATA_DICTIONARY.md`.
