@@ -14,6 +14,7 @@ import PerformancePage from './PerformancePage.jsx'
 import DoubtsPage from './DoubtsPage.jsx'
 import DoubtDetailPage from './DoubtDetailPage.jsx'
 import AttendancePage from './AttendancePage.jsx'
+import PaymentDuesPage from './PaymentDuesPage.jsx'
 import ProfilePage from './ProfilePage.jsx'
 import SupportPage from './SupportPage.jsx'
 
@@ -35,6 +36,7 @@ export default function StudentRoutes() {
       <Route path="doubts" element={<DoubtsPage />} />
       <Route path="doubts/:doubtId" element={<DoubtDetailPage />} />
       <Route path="attendance" element={<AttendancePage />} />
+      <Route path="payment-dues" element={<PaymentDuesPage />} />
       <Route path="profile" element={<ProfilePage />} />
       <Route path="support" element={<SupportPage />} />
       <Route path="*" element={<Navigate to="/student/dashboard" replace />} />

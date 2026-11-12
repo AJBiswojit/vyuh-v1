@@ -6,6 +6,8 @@ import AdminApprovalsPage from './AdminApprovalsPage.jsx'
 import AdminPoliciesPage from './AdminPoliciesPage.jsx'
 import AdminIntegrityPage from './AdminIntegrityPage.jsx'
 import AdminReportsPage from './AdminReportsPage.jsx'
+import SupportDeskPage from './SupportDeskPage.jsx'
+import PaymentsPage from './PaymentsPage.jsx'
 import AdminModerationPage from './AdminModerationPage.jsx'
 import AdminAuditLogPage from './AdminAuditLogPage.jsx'
 import AdminSettingsPage from './AdminSettingsPage.jsx'
@@ -21,6 +23,8 @@ export default function AdminRoutes() {
       <Route path="policies" element={<AdminPoliciesPage />} />
       <Route path="integrity" element={<AdminIntegrityPage />} />
       <Route path="reports" element={<AdminReportsPage />} />
+      <Route path="support" element={<SupportDeskPage />} />
+      <Route path="payments" element={<PaymentsPage />} />
       <Route path="moderation" element={<AdminModerationPage />} />
       <Route path="audit-log" element={<AdminAuditLogPage />} />
       <Route path="settings" element={<AdminSettingsPage />} />

@@ -10,6 +10,8 @@ import {
   RefreshCw,
   Shield,
   Users,
+  Wallet,
+  LifeBuoy,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext.jsx'
 import useAsync from '../../lib/useAsync.js'
@@ -18,6 +20,7 @@ import { formatTime, relativeTime } from '../../lib/time.js'
 import { ErrorState, LoadingBlock, EmptyState } from '../../ui/states.jsx'
 import { PageHeader, ProgressBar, StatTile, StatusBadge, statusLabel, statusTone } from '../../ui/workspace-kit.jsx'
 import { DonutChart, TrendArea, CHART_TONE } from '../../ui/charts.jsx'
+import { formatCurrency } from '../../lib/fee-calculations.js'
 import Button from '../../ui/Button.jsx'
 
 export default function AdminOverviewPage() {
@@ -73,6 +76,8 @@ export default function AdminOverviewPage() {
           { label: 'Live classes', value: counts.liveClasses, hint: `${counts.classesToday} scheduled today`, to: '/admin/reports', icon: CalendarClock },
           { label: 'Active examinations', value: counts.activeExams, hint: 'Open window now', to: '/admin/integrity', icon: ClipboardList },
           { label: 'Pending approvals', value: counts.pendingApprovals, hint: 'Awaiting your decision', to: '/admin/approvals', icon: CheckSquare },
+          { label: 'Outstanding dues', value: formatCurrency(counts.outstandingDues), hint: `${counts.overdueFees} overdue · ${counts.pendingFeeRequests} fee requests`, to: '/admin/payments', icon: Wallet },
+          { label: 'Support desk', value: counts.pendingSupportTickets, hint: 'Tickets awaiting a response', to: '/admin/support', icon: LifeBuoy },
           { label: 'Integrity events', value: counts.unresolvedIntegrity, hint: 'Unresolved', to: '/admin/integrity', icon: Shield },
           { label: 'Flagged content', value: counts.flaggedRecordings, hint: `${counts.openTickets} open tickets`, to: '/admin/moderation', icon: Flag },
         ].map((tile, index) => (

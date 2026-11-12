@@ -5,8 +5,13 @@
 import { ApiError, request, assert, nowIso, createId, round } from './api.js'
 import { insert, loadStore, updateRecord } from '../data/mock/mock-storage.js'
 import { findUser, addAuditEvent, notify, getPolicies, publicUser } from './repository.js'
-import { computeAttendance, summariseAttendance, attendanceTone } from '../lib/attendance-calculations.js'
-import { monthKey, monthLabel } from '../lib/time.js'
+import {
+  computeAttendance,
+  summariseAttendance,
+  attendanceTone,
+  decorateAttendanceTiming,
+  buildAttendanceDayView,
+} from '../lib/attendance-calculations.js'
 
 function classIndex() {
   const store = loadStore()
@@ -23,26 +28,27 @@ export const attendanceService = {
         const student = store.users.find((user) => user.id === studentId)
         assert(student, 'Student not found.', { code: 'not-found', status: 404 })
         const klasses = classIndex()
+        const now = new Date()
         const records = store.attendance
           .filter((record) => record.studentId === studentId)
           .map((record) => {
             const klass = klasses.get(record.classId)
             const computed = computeAttendance(record, klass, policy)
-            return {
+            return decorateAttendanceTiming({
               ...computed,
               classTitle: klass?.title || 'Class session',
               subjectId: klass?.subjectId || 'sub_phy',
               facultyId: klass?.facultyId || null,
               facultyName: findUser(klass?.facultyId)?.name || '—',
               scheduledStartAt: klass?.scheduledStartAt,
-              sessionStartedAt: klass?.sessionStartedAt,
-              sessionEndedAt: klass?.sessionEndedAt,
+              scheduledEndAt: klass?.scheduledEndAt,
               classStatus: klass?.status,
-            }
+            }, klass, policy)
           })
 
         const summary = summariseAttendance(records, klasses)
         const threshold = policy?.attendance?.defaultThresholdPercent ?? 75
+        const dayView = buildAttendanceDayView(records, { policy, now })
 
         const bySubjectMap = new Map()
         records.forEach((record) => {
@@ -53,12 +59,18 @@ export const attendanceService = {
             eligibleMinutes: 0,
             present: 0,
             missed: 0,
+            lateArrivals: 0,
+            earlyDepartures: 0,
+            warnings: 0,
           }
           bucket.sessions += 1
           bucket.attendedMinutes += record.attendedDuration
           bucket.eligibleMinutes += record.eligibleDuration
           if (record.status === 'present') bucket.present += 1
           if (record.status === 'absent') bucket.missed += 1
+          if (record.lateArrival) bucket.lateArrivals += 1
+          if (record.earlyDeparture) bucket.earlyDepartures += 1
+          if (record.isEligible && !record.meetsThreshold) bucket.warnings += 1
           bySubjectMap.set(record.subjectId, bucket)
         })
 
@@ -69,23 +81,7 @@ export const attendanceService = {
           percentage: bucket.eligibleMinutes ? round((bucket.attendedMinutes / bucket.eligibleMinutes) * 100, 1) : 0,
         }))
 
-        const byMonthMap = new Map()
-        records.forEach((record) => {
-          const key = monthKey(record.scheduledStartAt || record.sessionStartedAt)
-          const bucket = byMonthMap.get(key) || { key, label: monthLabel(key), sessions: 0, attended: 0, eligible: 0 }
-          bucket.sessions += 1
-          bucket.attended += record.attendedDuration
-          bucket.eligible += record.eligibleDuration
-          byMonthMap.set(key, bucket)
-        })
-        const byMonth = [...byMonthMap.values()]
-          .map((bucket) => ({
-            ...bucket,
-            attended: round(bucket.attended, 1),
-            eligible: round(bucket.eligible, 1),
-            percentage: bucket.eligible ? round((bucket.attended / bucket.eligible) * 100, 1) : 0,
-          }))
-          .sort((a, b) => a.key.localeCompare(b.key))
+        const byMonth = dayView.monthly
 
         return {
           records,
@@ -95,6 +91,9 @@ export const attendanceService = {
             subjectId: record.subjectId,
             facultyName: record.facultyName,
             scheduledStartAt: record.scheduledStartAt,
+            scheduledEndAt: record.scheduledEndAt,
+            sessionStartedAt: record.sessionStartedAt,
+            sessionEndedAt: record.sessionEndedAt,
             attendedMinutes: record.attendedDuration,
             eligibleMinutes: record.eligibleDuration,
             percentage: record.attendancePercentage,
@@ -103,6 +102,21 @@ export const attendanceService = {
             connections: record.joinEvents.length,
             intervals: record.intervals,
             threshold: record.threshold,
+            dateKey: record.dateKey,
+            dateLabel: record.dateLabel,
+            firstIn: record.firstIn,
+            lastOut: record.lastOut,
+            firstInLabel: record.firstInLabel,
+            lastOutLabel: record.lastOutLabel,
+            checkoutNote: record.checkoutNote,
+            lateArrivalMinutes: record.lateArrivalMinutes,
+            earlyDepartureMinutes: record.earlyDepartureMinutes,
+            lateArrival: record.lateArrival,
+            earlyDeparture: record.earlyDeparture,
+            reconnectionCount: record.reconnectionCount,
+            isEligible: record.isEligible,
+            isPending: record.isPending,
+            classStatus: record.classStatus,
           })),
           summary: {
             ...summary,
@@ -116,9 +130,11 @@ export const attendanceService = {
           },
           bySubject,
           byMonth,
+          dayView,
+          timingWarnings: dayView.timingWarnings,
           missingHours: round(Math.max(0, summary.eligibleMinutes - summary.attendedMinutes) / 60, 1),
           attendedHours: round(summary.attendedMinutes / 60, 1),
-          warnings: records.filter((record) => !record.meetsThreshold && record.status !== 'excused'),
+          warnings: records.filter((record) => record.isEligible && !record.meetsThreshold && record.status !== 'excused'),
         }
       },
       { label: 'attendance', latency: 240 },
@@ -233,7 +249,7 @@ export const attendanceService = {
       })
       const overall = summariseAttendance(records, klasses)
       const exceptions = records
-        .filter((record) => !record.meetsThreshold)
+        .filter((record) => record.eligibleDuration > 0 && !record.meetsThreshold)
         .map((record) => {
           const user = findUser(record.studentId)
           const klass = klasses.get(record.classId)

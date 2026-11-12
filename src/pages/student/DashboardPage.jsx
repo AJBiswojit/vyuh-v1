@@ -12,6 +12,8 @@ import {
   CalendarDays,
   Timer,
   Target,
+  Wallet,
+  LifeBuoy,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext.jsx'
 import useAsync from '../../lib/useAsync.js'
@@ -23,12 +25,15 @@ import { doubtService } from '../../services/doubt.service.js'
 import { recordingService } from '../../services/recording.service.js'
 import { notificationService } from '../../services/notification.service.js'
 import { analysisService } from '../../services/analysis.service.js'
+import { feeService } from '../../services/fee.service.js'
+import { supportService } from '../../services/support.service.js'
 import { formatTime, formatDate, formatDayLabel, relativeTime, greetingForNow } from '../../lib/time.js'
 import { subjectName } from '../../data/mock/subjects.mock.js'
 import { ErrorState, LoadingBlock, SkeletonCards, EmptyState } from '../../ui/states.jsx'
 import { BentoCard, PageHeader, ProgressBar, StatusBadge, Timeline } from '../../ui/workspace-kit.jsx'
 import { DonutChart, CHART_TONE } from '../../ui/charts.jsx'
 import { AccountAvatar, RoleTag } from '../../ui/account-identity.jsx'
+import { formatCurrency } from '../../lib/fee-calculations.js'
 
 /* Computed once per page load: the header eyebrow is a label, not a clock. */
 const TODAY_LABEL = formatDate(new Date())
@@ -49,7 +54,7 @@ export default function StudentDashboard() {
 
   const { data, error, loading, refresh } = useAsync(
     async () => {
-      const [student, exams, classes, attendance, doubts, recordings, notifications, performance] = await Promise.all([
+      const [student, exams, classes, attendance, doubts, recordings, notifications, performance, fees, support] = await Promise.all([
         userService.getStudent(user.id),
         examService.getStudentExams(user.id),
         liveClassService.getStudentClasses(user.id),
@@ -58,8 +63,10 @@ export default function StudentDashboard() {
         recordingService.listRecordings({ forStudentId: user.id }),
         notificationService.listForUser(user.id),
         analysisService.getStudentPerformance(user.id),
+        feeService.getStudentFees(user.id),
+        supportService.listForUser(user.id),
       ])
-      return { student, exams, classes, attendance, doubts, recordings, notifications, performance }
+      return { student, exams, classes, attendance, doubts, recordings, notifications, performance, fees, support }
     },
     [user.id],
   )
@@ -97,7 +104,7 @@ export default function StudentDashboard() {
     )
   }
 
-  const { student, classes, attendance, doubts, recordings, notifications, performance } = data
+  const { student, classes, attendance, doubts, recordings, notifications, performance, fees, support } = data
   const liveClass = classes.live[0] || null
   const nextClass = classes.upcoming[0] || null
   const latestResult = performance.points[0] || null
@@ -270,6 +277,54 @@ export default function StudentDashboard() {
           </div>
         </BentoCard>
       </div>
+
+      {/* concise account + support pulse: one row, not another dashboard section */}
+      <section className="surface-flat mt-4 p-3.5" aria-label="Fees and support snapshot">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            {
+              label: 'Next fee deadline',
+              value: fees.summary.nextDueAt ? formatDate(fees.summary.nextDueAt) : 'No upcoming deadline',
+              hint: fees.summary.overdueCount ? `${fees.summary.overdueCount} overdue` : fees.summary.nextDueFee?.title || 'All scheduled fees clear',
+              icon: Wallet,
+              to: '/student/payment-dues',
+            },
+            {
+              label: 'Outstanding dues',
+              value: formatCurrency(fees.summary.totalOutstanding),
+              hint: `${formatCurrency(fees.summary.totalPaid)} paid of ${formatCurrency(fees.summary.totalFees)}`,
+              icon: Wallet,
+              to: '/student/payment-dues',
+            },
+            {
+              label: 'Latest payment',
+              value: fees.summary.latestPaymentLabel,
+              hint: fees.summary.latestPayment?.transactionId || 'No transaction recorded yet',
+              icon: Wallet,
+              to: '/student/payment-dues',
+            },
+            {
+              label: 'Pending support',
+              value: `${support.stats.pending}`,
+              hint: support.stats.pending === 1 ? '1 request awaiting a response' : `${support.stats.pending} requests awaiting a response`,
+              icon: LifeBuoy,
+              to: '/student/support',
+            },
+          ].map((item) => {
+            const Icon = item.icon
+            return (
+              <Link key={item.label} to={item.to} className="group flex items-start gap-2 rounded-[10px] border border-[var(--line)] bg-white px-2.5 py-2 transition hover:border-[var(--sky-300)]">
+                <span className="stat-icon mt-0.5"><Icon className="h-3.5 w-3.5" aria-hidden="true" /></span>
+                <span className="min-w-0">
+                  <span className="block label-xs">{item.label}</span>
+                  <span className="mt-0.5 block truncate text-[12px] font-medium text-ink">{item.value}</span>
+                  <span className="mt-0.5 block truncate text-[10px] text-soft">{item.hint}</span>
+                </span>
+              </Link>
+            )
+          })}
+        </div>
+      </section>
 
       {/* live + quick actions */}
       <div className="mt-4 grid gap-4 lg:grid-cols-12">

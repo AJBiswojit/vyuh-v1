@@ -67,7 +67,11 @@ export function statusTone(status) {
     answered: 'sky',
     resolved: 'good',
     closed: 'cream',
+    'waiting-for-student': 'cream',
     pending: 'warn',
+    'part-paid': 'sky',
+    paid: 'good',
+    overdue: 'danger',
     approved: 'good',
     rejected: 'danger',
     expired: 'warn',
@@ -77,6 +81,9 @@ export function statusTone(status) {
     absent: 'danger',
     partial: 'warn',
     excused: 'sky',
+    'not-eligible': 'neutral',
+    failed: 'danger',
+    success: 'good',
     clear: 'good',
     flagged: 'warn',
     removed: 'danger',
@@ -92,11 +99,22 @@ export function statusTone(status) {
   return map[status] || 'neutral'
 }
 
+const EXACT_STATUS_LABELS = {
+  'waiting-for-student': 'Waiting for Student',
+  'in-progress': 'In Progress',
+  'part-paid': 'Part Paid',
+  'not-eligible': 'Not Eligible',
+  success: 'Successful',
+  failed: 'Failed',
+}
+
 export function statusLabel(status) {
   if (!status) return '—'
-  return String(status)
+  const key = String(status)
+  if (EXACT_STATUS_LABELS[key]) return EXACT_STATUS_LABELS[key]
+  return key
     .split('-')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .map((word, index) => (index > 0 && ['for', 'and', 'of'].includes(word) ? word : word.charAt(0).toUpperCase() + word.slice(1)))
     .join(' ')
 }
 

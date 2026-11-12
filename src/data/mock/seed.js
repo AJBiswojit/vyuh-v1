@@ -18,10 +18,11 @@ import { NOTIFICATIONS } from './notifications.mock.js'
 import { DEFAULT_POLICIES } from './policies.mock.js'
 import { APPROVALS } from './approvals.mock.js'
 import { INTEGRITY_EVENTS, EXAM_CONTROLS } from './integrity.mock.js'
-import { SUPPORT_TICKETS } from './support.mock.js'
+import { SUPPORT_TICKETS, SUPPORT_AI_CONVERSATIONS } from './support.mock.js'
 import { AUDIT_EVENTS } from './audit.mock.js'
 import { SCHEMA_VERSION, emptyStore, hashPassword } from './mock-storage.js'
 import { rebaseDemoTimeline } from './demo-timeline.js'
+import { buildFeeSeed, isoAtOffset } from '../../lib/fee-calculations.js'
 
 export const INSTITUTE = {
   id: 'inst_001',
@@ -88,10 +89,29 @@ export function buildSeed() {
   store.approvals = APPROVALS.map((approval) => ({ ...approval }))
   store.integrity = INTEGRITY_EVENTS.map((event) => ({ ...event }))
   store.examControls = EXAM_CONTROLS.map((control) => ({ ...control }))
-  store.supportTickets = SUPPORT_TICKETS.map((ticket) => ({ ...ticket }))
+  store.supportTickets = SUPPORT_TICKETS.map((ticket) => ({ ...ticket, statusEvents: [] }))
   store.audit = AUDIT_EVENTS.map((event) => ({ ...event }))
   store.aiConversations = AI_CONVERSATIONS.map((conversation) => ({ ...conversation }))
   store.settings = { ...SETTINGS }
+
+  const seedNow = new Date()
+  const feeSeed = buildFeeSeed(store, seedNow)
+  store.fees = feeSeed.fees
+  store.payments = feeSeed.payments
+  store.feeRequests = feeSeed.feeRequests
+
+  /* AI Auto Support transcripts are relative to the demo day but are never
+     presented as live events. The source label identifies the mock provider. */
+  store.supportAiConversations = SUPPORT_AI_CONVERSATIONS.map((conversation) => ({
+    ...conversation,
+    createdAt: isoAtOffset(seedNow, conversation.createdOffsetDays, 8),
+    updatedAt: isoAtOffset(seedNow, conversation.updatedOffsetDays, 8),
+    escalatedTicketId: null,
+    messages: conversation.messages.map((message) => ({
+      ...message,
+      at: new Date(new Date(isoAtOffset(seedNow, conversation.createdOffsetDays, 8)).getTime() + message.atOffsetMinutes * 60000).toISOString(),
+    })),
+  }))
 
   // usageCount is derived from exam composition at seed time so the question
   // bank shows real reuse counts rather than invented numbers.
@@ -105,5 +125,5 @@ export function buildSeed() {
 
   /* The authored teaching week is treated as "today" so live sessions, open
      examinations and upcoming classes stay believable whenever the demo is run. */
-  return rebaseDemoTimeline(store)
+  return rebaseDemoTimeline(store, seedNow)
 }

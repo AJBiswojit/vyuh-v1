@@ -210,6 +210,47 @@ export const ATTENDANCE_EVENTS = [
     correctionRequested: false,
   },
 
+  /* class_010 — second eligible class on 10 Nov, with own join/leave pairs. */
+  {
+    id: 'att_022',
+    classId: 'class_010',
+    sessionId: 'sess_010',
+    studentId: 'stu_001',
+    joinEvents: [
+      { at: '2026-11-10T11:36:00.000Z' },
+      { at: '2026-11-10T12:25:00.000Z' },
+    ],
+    leaveEvents: [
+      { at: '2026-11-10T12:20:00.000Z' },
+      { at: '2026-11-10T12:55:00.000Z' },
+    ],
+    reconnectionEvents: [{ at: '2026-11-10T12:25:00.000Z', reason: 'network reconnect' }],
+    status: 'partial',
+    correctionRequested: false,
+  },
+  {
+    id: 'att_023',
+    classId: 'class_010',
+    sessionId: 'sess_010',
+    studentId: 'stu_002',
+    joinEvents: [{ at: '2026-11-10T11:32:00.000Z' }],
+    leaveEvents: [{ at: '2026-11-10T13:01:00.000Z' }],
+    reconnectionEvents: [],
+    status: 'present',
+    correctionRequested: false,
+  },
+  {
+    id: 'att_024',
+    classId: 'class_010',
+    sessionId: 'sess_010',
+    studentId: 'stu_003',
+    joinEvents: [],
+    leaveEvents: [],
+    reconnectionEvents: [],
+    status: 'absent',
+    correctionRequested: false,
+  },
+
   /* class_001 — live now, in-progress records */
   {
     id: 'att_019',

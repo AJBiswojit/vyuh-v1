@@ -2215,3 +2215,111 @@ a.stat-tile:hover,
     font-size: 16px;
   }
 }
+
+/* ------------------------------------------------------------------
+   Support workspace: deterministic mock chat, shared ticket activity
+   and date-wise attendance class cards. Scoped classes avoid changing
+   the global .tab, .surface-* or .btn primitives used by other pages.
+------------------------------------------------------------------- */
+.support-chat {
+  background:
+    radial-gradient(circle at 12% 15%, rgba(224, 242, 254, 0.55), transparent 34%),
+    var(--surface-sunken);
+}
+
+.support-message {
+  max-width: min(92%, 620px);
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 1px 2px rgba(20, 22, 24, 0.04);
+}
+
+.support-message.is-user {
+  margin-left: auto;
+  border-color: var(--sky-200);
+  background: var(--sky-50);
+}
+
+.support-message.is-assistant {
+  margin-right: auto;
+  border-color: var(--cream-300);
+  background: #fffdf7;
+}
+
+.support-message.is-system {
+  max-width: 100%;
+  border-style: dashed;
+  background: var(--surface-muted);
+  color: var(--ink-60);
+  text-align: center;
+}
+
+.support-message-meta {
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-45);
+}
+
+.support-timeline {
+  position: relative;
+  margin-left: 5px;
+  padding-left: 18px;
+}
+
+.support-timeline::before {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 3px;
+  width: 1px;
+  background: var(--line-strong);
+  content: '';
+}
+
+.support-timeline-item {
+  position: relative;
+  display: flex;
+  gap: 8px;
+  padding: 0 0 14px;
+}
+
+.support-timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.support-timeline-dot {
+  position: absolute;
+  top: 5px;
+  left: -18px;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--sky-500);
+  border-radius: 999px;
+  background: var(--sky-100);
+}
+
+.support-timeline-dot.is-status {
+  border-color: var(--cream-600);
+  background: var(--cream-300);
+}
+
+.day-session {
+  padding: 10px 12px;
+  border: 1px solid var(--sky-200);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+@media (max-width: 640px) {
+  .support-message {
+    max-width: 100%;
+  }
+
+  .day-session dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

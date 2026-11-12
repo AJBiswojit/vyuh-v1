@@ -65,4 +65,11 @@ export const REPORT_DEFINITIONS = [
     filters: ['role', 'status'],
     metrics: ['total', 'open', 'resolved', 'medianResolutionHours'],
   },
+  {
+    id: 'report_fee_dues',
+    name: 'Fees & dues',
+    description: 'Approved fee records, successful payments and derived outstanding balances by batch.',
+    filters: ['batchId'],
+    metrics: ['billed', 'paid', 'outstanding', 'dueDate', 'status', 'paymentReference'],
+  },
 ]

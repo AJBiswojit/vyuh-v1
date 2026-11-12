@@ -135,6 +135,34 @@ export function startOfDayIso(iso) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate()).toISOString()
 }
 
+/** Calendar-day key in the institute timezone. Used by the attendance date
+ *  picker so UTC session timestamps group under the same day a student sees. */
+export function instituteDayKey(value = new Date()) {
+  const date = value instanceof Date ? value : new Date(value || Date.now())
+  const parts = new Intl.DateTimeFormat('en-IN', {
+    timeZone: INSTITUTE_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date)
+  const byType = Object.fromEntries(parts.map((part) => [part.type, part.value]))
+  return `${byType.year}-${byType.month}-${byType.day}`
+}
+
+/** Human label for an institute-day key, e.g. 2026-11-10 → Tue, 10 Nov 2026. */
+export function formatDayKey(key) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(key || ''))) return '—'
+  const [year, month, day] = key.split('-').map(Number)
+  const date = new Date(Date.UTC(year, month - 1, day, 12))
+  return new Intl.DateTimeFormat('en-IN', {
+    timeZone: INSTITUTE_TIMEZONE,
+    weekday: 'short',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(date)
+}
+
 export function monthKey(iso) {
   const date = new Date(iso)
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`

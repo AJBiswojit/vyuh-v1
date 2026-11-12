@@ -78,15 +78,29 @@ export function ChartFrame({ title, subtitle, height = 220, children, action, le
 
 function TooltipBox({ active, payload, label, unit = '' }) {
   if (!active || !payload?.length) return null
+  const heading = payload[0]?.payload?.tooltipLabel || label
   return (
     <div className="rounded-[10px] border border-[var(--sky-200)] bg-white px-2.5 py-2 shadow-[var(--shadow-md)]">
-      <p className="text-[10.5px] uppercase tracking-wide text-soft">{label}</p>
+      <p className="max-w-[240px] text-[10.5px] uppercase tracking-wide text-soft">{heading}</p>
       {payload.map((entry) => (
         <p key={entry.dataKey || entry.name} className="mt-0.5 text-[12px] font-medium text-ink">
           {entry.name}: {typeof entry.value === 'number' ? entry.value.toFixed(entry.value % 1 === 0 ? 0 : 1) : entry.value}
           {unit}
         </p>
       ))}
+    </div>
+  )
+}
+
+function DonutTooltip({ active, payload, formatter }) {
+  if (!active || !payload?.length) return null
+  const entry = payload[0]?.payload || payload[0]
+  return (
+    <div className="rounded-[10px] border border-[var(--sky-200)] bg-white px-2.5 py-2 shadow-[var(--shadow-md)]">
+      <p className="text-[10.5px] uppercase tracking-wide text-soft">{entry?.name}</p>
+      <p className="mt-0.5 max-w-[260px] text-[12px] font-medium leading-snug text-ink">
+        {formatter ? formatter(entry) : `${entry?.value ?? 0}`}
+      </p>
     </div>
   )
 }
@@ -131,14 +145,14 @@ export function TrendArea({
   )
 }
 
-export function MultiLine({ data, xKey = 'label', series = [], height = 220, domain = [0, 100] }) {
+export function MultiLine({ data, xKey = 'label', series = [], height = 220, domain = [0, 100], unit = '' }) {
   return (
     <ResponsiveContainer width="100%" height={height}>
       <LineChart data={data} margin={{ top: 6, right: 8, bottom: 0, left: -18 }}>
         <CartesianGrid stroke={GRID} vertical={false} />
         <XAxis dataKey={xKey} tick={axisStyle} axisLine={false} tickLine={false} />
         <YAxis domain={domain} tick={axisStyle} axisLine={false} tickLine={false} width={38} />
-        <Tooltip content={<TooltipBox />} />
+        <Tooltip content={<TooltipBox unit={unit} />} />
         <Legend wrapperStyle={{ fontSize: 11, color: 'rgba(36,53,64,0.7)' }} iconType="circle" iconSize={6} />
         {series.map((entry, index) => (
           <Line
@@ -167,6 +181,7 @@ export function ComparisonBars({ data, xKey = 'name', series = [], height = 220,
           <XAxis type="number" domain={[0, 100]} tick={axisStyle} axisLine={false} tickLine={false} />
           <YAxis type="category" dataKey={xKey} tick={axisStyle} axisLine={false} tickLine={false} width={82} />
           <Tooltip content={<TooltipBox unit={unit} />} />
+          <Legend wrapperStyle={{ fontSize: 11, color: 'rgba(36,53,64,0.7)' }} iconType="circle" iconSize={6} />
           {series.map((entry, index) => (
             <Bar
               key={entry.key}
@@ -189,6 +204,7 @@ export function ComparisonBars({ data, xKey = 'name', series = [], height = 220,
         <XAxis dataKey={xKey} tick={axisStyle} axisLine={false} tickLine={false} />
         <YAxis tick={axisStyle} axisLine={false} tickLine={false} width={38} />
         <Tooltip content={<TooltipBox unit={unit} />} />
+        <Legend wrapperStyle={{ fontSize: 11, color: 'rgba(36,53,64,0.7)' }} iconType="circle" iconSize={6} />
         {series.map((entry, index) => (
           <Bar
             key={entry.key}
@@ -205,7 +221,7 @@ export function ComparisonBars({ data, xKey = 'name', series = [], height = 220,
   )
 }
 
-export function DonutChart({ data, height = 180, innerRadius = 48, outerRadius = 70, centerLabel, centerValue }) {
+export function DonutChart({ data, height = 180, innerRadius = 48, outerRadius = 70, centerLabel, centerValue, tooltipFormatter }) {
   return (
     <div className="relative">
       <ResponsiveContainer width="100%" height={height}>
@@ -224,7 +240,7 @@ export function DonutChart({ data, height = 180, innerRadius = 48, outerRadius =
               <Cell key={entry.name} fill={entry.color || CHART_COLORS[index % CHART_COLORS.length]} />
             ))}
           </Pie>
-          <Tooltip content={<TooltipBox />} />
+          <Tooltip content={tooltipFormatter ? <DonutTooltip formatter={tooltipFormatter} /> : <TooltipBox />} />
         </PieChart>
       </ResponsiveContainer>
       {centerValue !== undefined ? (
