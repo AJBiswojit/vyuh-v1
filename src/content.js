@@ -1,9 +1,14 @@
+/* The public navbar reads PUBLIC_NAV from src/data/site/navigation.js.
+   This list is retained for the landing page's own internal links so nothing
+   that imported it breaks; it mirrors the same seven destinations. */
 export const NAV_LINKS = [
   { label: 'Home', to: '/', active: true },
-  { label: 'Features', to: '/#features' },
+  { label: 'About', to: '/about' },
   { label: 'Programs', to: '/programs' },
-  { label: 'Resources', to: '/#resources' },
-  { label: 'Pricing', to: '/pricing' },
+  { label: 'Learning Experience', to: '/learning-experience' },
+  { label: 'Resources', to: '/resources' },
+  { label: 'Admissions', to: '/admissions' },
+  { label: 'Contact', to: '/contact' },
 ]
 
 export const HERO_STATS = { value: '25K', label: 'ACTIVE LEARNERS' }
@@ -32,7 +37,7 @@ export const LEARNING_CARDS = [
       'Attempt topic-wise and full-length tests, analyze your performance, and track improvement with detailed insights.',
     image: '/assets/card-practice.webp',
     imageAlt: 'Illustration of two students collaborating over a laptop',
-    to: '/#features',
+    to: '/learning-experience',
   },
   {
     id: 'study-resources',
@@ -41,7 +46,7 @@ export const LEARNING_CARDS = [
       'Access high-quality notes, PYQs, and curated materials to support your preparation anytime, anywhere.',
     image: '/assets/card-resources.webp',
     imageAlt: 'Illustration of an educator holding an open book with study notes',
-    to: '/#resources',
+    to: '/resources',
   },
 ]
 
@@ -104,7 +109,7 @@ export const JOURNEY_STEPS = [
       'Build strong foundations with structured lessons, clear explanations and concept-focused learning.',
     image: '/assets/journey-understand.webp',
     imageAlt: 'Illustration of a student learning concepts on a laptop',
-    to: '/programs',
+    to: '/learning-experience#live-digital-classrooms',
   },
   {
     id: 'practice',
@@ -114,7 +119,7 @@ export const JOURNEY_STEPS = [
       'Strengthen your knowledge through topic-wise questions, mock tests and focused practice.',
     image: '/assets/journey-practice.webp',
     imageAlt: 'Illustration of a student practising questions on a tablet',
-    to: '/#features',
+    to: '/learning-experience#computer-based-examinations',
   },
   {
     id: 'improve',
@@ -124,7 +129,7 @@ export const JOURNEY_STEPS = [
       'Understand your performance, identify weak areas and make every next attempt better.',
     image: '/assets/journey-improve.webp',
     imageAlt: 'Illustration of a student reviewing a performance chart',
-    to: '/#results',
+    to: '/learning-experience#performance-intelligence',
   },
 ]
 
@@ -137,7 +142,7 @@ export const PROGRAMS = [
       'Strengthen concepts, practise problem-solving and improve your performance through structured preparation.',
     image: '/assets/program-jee.webp',
     imageAlt: 'Illustration of a student solving physics and mathematics problems',
-    to: '/programs',
+    to: '/programs#jee',
   },
   {
     id: 'neet',
@@ -147,7 +152,7 @@ export const PROGRAMS = [
       'Build subject knowledge, practise questions and evaluate your exam readiness with focused preparation.',
     image: '/assets/program-neet.webp',
     imageAlt: 'Illustration of a student studying biology with a microscope',
-    to: '/programs',
+    to: '/programs#neet',
   },
   {
     id: 'academic',
@@ -157,7 +162,7 @@ export const PROGRAMS = [
       'Develop strong fundamentals, revise important topics and stay consistent with your academic goals.',
     image: '/assets/program-academic.webp',
     imageAlt: 'Illustration of a student revising with textbooks and notes',
-    to: '/programs',
+    to: '/programs#foundation',
   },
 ]
 
@@ -188,9 +193,11 @@ export const TESTIMONIALS = [
   },
 ]
 
+/* Superseded by FOOTER_COLUMNS in src/data/site/navigation.js. Kept so any
+   existing import resolves; the four targets are all real routes. */
 export const FOOTER_LINKS = [
   { label: 'About', to: '/about' },
   { label: 'Programs', to: '/programs' },
-  { label: 'Support', to: '/support' },
+  { label: 'Admissions', to: '/admissions' },
   { label: 'Contact', to: '/contact' },
 ]

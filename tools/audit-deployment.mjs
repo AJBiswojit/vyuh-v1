@@ -48,7 +48,20 @@ if (!existsSync(vercelPath)) {
       problems.push('no rewrite targets /index.html')
     } else {
       const pattern = new RegExp(`^${fallback.source}$`)
-      for (const route of ['/login', '/student/dashboard', '/student/exams/exam_phy_001/analysis', '/admin/overview']) {
+      for (const route of [
+        '/login',
+        '/about',
+        '/programs',
+        '/learning-experience',
+        '/resources',
+        '/admissions',
+        '/contact',
+        '/legal',
+        '/resources/score-vs-accuracy',
+        '/student/dashboard',
+        '/student/exams/exam_phy_001/analysis',
+        '/admin/overview',
+      ]) {
         if (!pattern.test(route)) problems.push(`rewrite "${fallback.source}" does not match ${route}`)
       }
       for (const asset of ['/assets/index-Bc6pQWkb.js', '/assets/index-DbaGVSQ.css', '/favicon.svg', '/media/video/x.mp4']) {
@@ -114,6 +127,14 @@ function startHostServer() {
 
 const ROUTES = [
   '/',
+  '/about',
+  '/programs',
+  '/learning-experience',
+  '/resources',
+  '/resources/score-vs-accuracy',
+  '/admissions',
+  '/contact',
+  '/legal',
   '/login',
   '/forgot-password',
   '/student/dashboard',

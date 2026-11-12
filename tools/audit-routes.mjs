@@ -189,6 +189,53 @@ for (const role of roles) {
   }
 }
 
+/* ===================== 1b. public routes (signed out) ===================== */
+/* The seven public pages live outside every workspace, so they are audited
+   signed out. Direct entry, a full reload of the same URL and a client-side
+   back step all have to land on the same page. */
+const PUBLIC = {
+  '/': /Focused learning|With a strong focus/i,
+  '/about': /academic institute built for serious/i,
+  '/programs': /Two examination tracks/i,
+  '/learning-experience': /evidence built in|Academic teaching/i,
+  '/resources': /Resources for serious preparation/i,
+  '/resources/score-vs-accuracy': /Score percentage and accuracy/i,
+  '/admissions': /Admissions for the 2026/i,
+  '/contact': /Talk to the institute/i,
+  '/legal': /Privacy, data and accessibility/i,
+}
+
+if (!process.argv.includes('--role')) {
+  await authService.logout()
+  window.localStorage.clear()
+  for (const [path, expected] of Object.entries(PUBLIC)) {
+    const body = await mount(path)
+    const main = mainText()
+    const current = [...rootEl.querySelectorAll('nav[aria-label="Primary"] a[aria-current="page"]')]
+      .map((a) => a.getAttribute('href'))
+    const ownsRoute = ['/', '/about', '/programs', '/learning-experience', '/resources', '/admissions', '/contact'].includes(path)
+    const h1s = rootEl.querySelectorAll('main h1').length
+    const errors = [...new Set(sink.errors)]
+    const uncaught = [...new Set(sink.uncaught)]
+    check(`route ${path}`, Boolean(body) && expected.test(main) && h1s === 1 && !errors.length && !uncaught.length,
+      [
+        !expected.test(main) && `expected ${expected} | saw: ${text().slice(0, 70)}`,
+        h1s !== 1 && `${h1s} h1 elements`,
+        errors[0] && `console.error: ${errors[0]}`,
+        uncaught[0] && `uncaught: ${uncaught[0]}`,
+      ].filter(Boolean).join(' · '))
+    check(`active-state ${path}`,
+      ownsRoute ? current.length === 1 && current[0] === path : current.length === 0,
+      `aria-current on: ${current.join(', ') || 'none'}`)
+    check(`chrome ${path}`,
+      Boolean(rootEl.querySelector('nav[aria-label="Primary"]')) && Boolean(rootEl.querySelector('footer')),
+      'shared navbar and footer present')
+    /* reload: a second mount of the same entry has to reproduce the page */
+    await mount(path)
+    check(`refresh ${path}`, expected.test(mainText()), `saw: ${text().slice(0, 70)}`)
+  }
+}
+
 /* ======================= 2. sidebar link navigation ======================= */
 async function clickNav(role, expectedPath) {
   const links = [...rootEl.querySelectorAll(`nav a[href^="/${role}/"], aside a[href^="/${role}/"]`)]
