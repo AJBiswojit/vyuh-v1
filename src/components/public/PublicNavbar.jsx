@@ -56,12 +56,17 @@ export default function PublicNavbar({ variant = 'page' }) {
   const close = useCallback(() => setOpen(false), [])
 
   /* Home: the hero supplies the sky, so the pill is glass on sky.
-     Inner pages: glass on sky at the top, near-opaque white once scrolled. */
+     Inner pages: glass on sky at the top, near-opaque white once scrolled.
+
+     The outer surface is deliberately borderless and shadowless: it floats on
+     the hero rather than sitting inside an outlined pill. The glass tint, the
+     blur and the inner controls' own borders (the link group, Log In, the
+     mobile sheet) are what keep it readable as a surface. */
   const surfaceClass = homeVariant
-    ? 'border-white/75 bg-white/10 backdrop-blur-[6px]'
+    ? 'bg-white/10 backdrop-blur-[6px]'
     : scrolled
-      ? 'border-charcoal/10 bg-white/92 shadow-[0_16px_40px_-34px_rgba(36,39,41,0.6)] backdrop-blur-[14px]'
-      : 'border-white/75 bg-white/25 backdrop-blur-[8px]'
+      ? 'bg-white/92 backdrop-blur-[14px]'
+      : 'bg-white/25 backdrop-blur-[8px]'
 
   const isActive = (link) => link.match.some((path) => path === pathname)
 
@@ -70,7 +75,7 @@ export default function PublicNavbar({ variant = 'page' }) {
       <div className={`shell ${homeVariant ? 'pt-5 sm:pt-7' : 'pt-4 sm:pt-5'}`}>
         <nav
           aria-label="Primary"
-          className={`relative flex items-center justify-between rounded-full border px-2.5 py-1.5 transition duration-500 ease-calm sm:px-4 lg:py-2 ${surfaceClass}`}
+          className={`relative flex items-center justify-between rounded-full px-2.5 py-1.5 transition duration-500 ease-calm sm:px-4 lg:py-2 ${surfaceClass}`}
         >
           <Link to="/" className="flex items-center gap-2.5 rounded-full pl-1 pr-2 sm:gap-3">
             <Logo className="h-[30px] w-[30px] sm:h-[34px] sm:w-[34px]" />

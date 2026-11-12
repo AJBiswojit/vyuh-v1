@@ -146,6 +146,40 @@ for (const utility of UTILITIES) {
   }
 }
 
+/* Every colour/opacity utility used anywhere in src must actually reach the
+   bundle. The curated lists above only cover classes someone remembered to add;
+   this sweep catches the silent failure that motivated the audit in the first
+   place — a class such as `bg-white/92` that Tailwind drops because 92 is not on
+   the opacity scale, leaving an element with no surface and no error. */
+const classPattern =
+  /\b((?:bg|text|border|divide|ring|from|via|to|fill|stroke)-(?:white|black|charcoal|sky|cream|good|warn|bad)(?:-\d{2,3})?\/(?:\d{1,3}))(?![\w-])/g
+const srcFiles = []
+const walk = (dir) => {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = new URL(`${entry.name}${entry.isDirectory() ? '/' : ''}`, dir)
+    if (entry.isDirectory()) walk(full)
+    else if (/\.(jsx?|mjs)$/.test(entry.name)) srcFiles.push(full)
+  }
+}
+walk(new URL('../src/', import.meta.url))
+
+const used = new Map()
+for (const file of srcFiles) {
+  const text = readFileSync(file, 'utf8')
+  for (const match of text.matchAll(classPattern)) {
+    if (!used.has(match[1])) used.set(match[1], file.pathname.split('/src/').pop())
+  }
+}
+
+/* A variant prefix (hover:, focus:, md:) changes the selector to
+   `.hover\:bg-white\/92:hover`, so match on the utility part anywhere in a
+   selector rather than requiring it to start the rule. */
+const missing = []
+for (const [cls] of used) {
+  const escaped = cls.replace(/\//g, '\\/')
+  if (!css.includes(escaped)) missing.push(cls)
+}
+
 /* the built stylesheet must not still ship the old monochrome defaults */
 const REGRESSIONS = [
   { pattern: /\.badge\s*\{[^}]*background:\s*var\(--white\)/, label: 'base .badge still paints pure white' },
@@ -160,6 +194,12 @@ console.log(`\nchecked ${files.join(', ')} (${(css.length / 1024).toFixed(0)} kB
 console.log(`  · ${COMPONENT_CLASSES.length} component classes`)
 console.log(`  · ${TOKENS.length} design tokens`)
 console.log(`  · ${UTILITIES.length} arbitrary-value utilities`)
+console.log(`  · ${used.size} colour/opacity utilities found in src, all emitted`)
+
+for (const cls of missing) {
+  const where = used.get(cls)
+  problems.push(`colour utility never reaches the bundle (silently does nothing): ${cls} — used in src/${where}`)
+}
 
 if (problems.length) {
   console.log('')
