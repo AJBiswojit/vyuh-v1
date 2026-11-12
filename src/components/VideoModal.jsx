@@ -69,7 +69,7 @@ export default function VideoModal({ open, onClose }) {
               Our team walks you through the platform live during onboarding. Request a session and
               we will schedule a walkthrough at your convenience.
             </p>
-            <a href="mailto:hello@vyuh.in?subject=Platform%20walkthrough" className="ghost-btn self-start">
+            <a href="mailto:office@vyuhacademy.edu.in?subject=Platform%20walkthrough" className="ghost-btn self-start">
               Request a walkthrough
             </a>
           </div>

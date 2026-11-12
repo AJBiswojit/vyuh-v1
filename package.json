@@ -27,7 +27,8 @@
     "audit:student-exams": "node tools/audit-student-exams.mjs",
     "audit:workspace-shell": "node tools/audit-workspace-shell.mjs",
     "audit:header": "node tools/audit-header.mjs",
-    "audit:faculty-cards": "node tools/audit-faculty-cards.mjs"
+    "audit:faculty-cards": "node tools/audit-faculty-cards.mjs",
+    "audit:public": "node tools/audit-public-site.mjs"
   },
   "dependencies": {
     "framer-motion": "^14.12.0",
